@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: duo-space-postgres
+    environment:
+      POSTGRES_DB: duo_space
+      POSTGRES_USER: duo_user
+      POSTGRES_PASSWORD: duo_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
