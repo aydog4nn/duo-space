@@ -1,65 +1,96 @@
-# Duo Space API
+# DuoSpace
 
-Çiftlerin birlikte izleyip, sohbet edebileceği ve oyun oynayabileceği uygulamanın Spring Boot backend'i.
+DuoSpace, çiftlerin birlikte film izleyebileceği, ortak listeler oluşturabileceği, mesajlaşabileceği ve mini oyunlar oynayabileceği bir web uygulaması temelidir.
 
-## Geliştirme ortamı
+Şu an proje; görsel bir çift dashboard'u, Spring Boot REST API altyapısı, PostgreSQL şeması ve Docker ile tek komutta çalışan geliştirme ortamını içerir.
 
-- Java 21
-- Spring Boot
-- PostgreSQL 17 (Docker)
+## Özellikler
 
-## Frontend
+- Birlikte izleme için film ekranı ve ortak izleme listesi arayüzü
+- Oda ve watchlist CRUD API altyapısı
+- Kullanıcı kaydı ve BCrypt parola hashleme
+- Flyway ile versiyonlanmış PostgreSQL migration'ları
+- Responsive, romantik çift sitesi frontend'i
+- Spring API + PostgreSQL için Docker Compose paketi
 
-Arayüz kaynakları kökteki `frontend/` klasöründedir. Docker build aşamasında bu dosyalar Spring Boot'un static kaynaklarına eklenir; uygulama tek container olarak `http://localhost:8080` üzerinden servis edilir.
+## Teknolojiler
 
-## PostgreSQL'i başlatma
+- Java 21 / Spring Boot
+- Spring Data JPA, Spring Security, Validation, WebSocket
+- PostgreSQL 17 / Flyway
+- Docker & Docker Compose
+- Vanilla HTML, CSS ve JavaScript
 
-```bash
-docker compose up -d
-```
-
-Bu komut PostgreSQL ile Spring API'yi birlikte çalıştırır. Arayüzü `http://localhost:8080` adresinde açabilirsin. Veritabanı `localhost:5432` üzerinde çalışır.
-
-## Branch düzeni
-
-Her küçük backend adımı ayrı bir `feature/...` branch'inde geliştirilir. Tamamlanan her adımda README güncellenir ve ayrı commit atılır.
-
-## Package düzeni
+## Proje yapısı
 
 ```text
-controller/       REST controller sınıfları
-service/abs/      Service interface'leri
-service/impl/     Service implementasyonları
-repository/       Spring Data JPA repository'leri
-entity/           JPA entity ve enum sınıfları
-dto/              Request/response DTO'ları
-exception/        Global exception handler ve özel exception'lar
-config/           Security ve uygulama konfigürasyonu
+frontend/                 Arayüz kaynak dosyaları
+src/main/java/
+  config/                 Uygulama ve security ayarları
+  controller/             REST controller'lar
+  dto/                    Request/response DTO'ları
+  entity/                 JPA entity ve enum'ları
+  exception/              Global hata yönetimi
+  repository/             Spring Data repository'leri
+  service/abs/            Service interface'leri
+  service/impl/           Service implementasyonları
+src/main/resources/
+  db/migration/           Flyway SQL migration'ları
+Dockerfile                Spring API image tanımı
+compose.yaml              API + PostgreSQL geliştirme ortamı
 ```
 
-## Domain modeli
+## Hızlı başlangıç
 
-İlk model `User`'dır. UUID kimlik, benzersiz kullanıcı adı ve e-posta, parola özeti ile oluşturulma/güncellenme zamanlarını tutar. Tablo şeması Flyway ile `V1__create_users_table.sql` migration'ında yönetilir.
+Docker Desktop açıkken:
 
-## Kayıt endpoint'i
-
-`POST /api/v1/auth/register` kullanıcı oluşturur. Parolalar BCrypt ile hashlenir; yalın parola hiçbir zaman veritabanına yazılmaz.
-
-```json
-{
-  "username": "akin",
-  "email": "akin@example.com",
-  "password": "guclu-bir-parola"
-}
+```bash
+docker compose up --build -d
 ```
 
-## Temel CRUD
+Ardından uygulamayı aç:
 
-- `POST/GET/PUT/DELETE /api/v1/rooms`
-- `POST/GET/PUT/DELETE /api/v1/rooms/{roomId}/watchlist`
+```text
+http://localhost:8080
+```
 
-Bu geçici CRUD aşamasında sahiplik kimliği request ile gelir. JWT eklendiğinde bu bilgi token'dan alınacak ve endpoint'ler yetkilendirilecek.
+Container durumunu görmek için:
 
-## Sıradaki adım
+```bash
+docker compose ps
+```
 
-CRUD endpoint testlerini eklemek; ardından JWT ile giriş ve endpoint yetkilendirmesine geçmek.
+Kapatmak için:
+
+```bash
+docker compose down
+```
+
+## Geliştirme notları
+
+- Frontend kaynakları `frontend/` altındadır. Docker build sürecinde Spring Boot static kaynaklarına eklenir.
+- Yerelde Spring Boot çalışırken `frontend/` dosyaları doğrudan servis edilir.
+- Veritabanı `localhost:5432` üzerinde çalışır; yerel geliştirme bilgileri `compose.yaml` içindedir.
+- Yeni şema değişiklikleri için mevcut migration dosyası değiştirilmez; yeni bir `V{n}__description.sql` dosyası eklenir.
+
+## API özeti
+
+| Alan | Endpoint |
+| --- | --- |
+| Kayıt | `POST /api/v1/auth/register` |
+| Odalar | `POST/GET/PUT/DELETE /api/v1/rooms` |
+| Ortak liste | `POST/GET/PUT/DELETE /api/v1/rooms/{roomId}/watchlist` |
+
+> JWT henüz eklenmediği için oda ve watchlist işlemlerindeki kullanıcı bilgisi geçici olarak request üzerinden alınır. JWT aşamasında bu bilgi doğrulanmış token'dan gelecektir.
+
+## Yol haritası
+
+1. CRUD endpoint integration testleri
+2. JWT tabanlı giriş ve yetkilendirme
+3. WebSocket ile chat ve izleme senkronizasyonu
+4. Ortak oyun odaları
+5. CI/CD ve production deployment
+
+## Branch yaklaşımı
+
+Her bağımsız iş `feature/...`, `refactor/...`, `docs/...` veya `chore/...` branch'inde geliştirilir; testten sonra commitlenir ve `main`e alınır.
