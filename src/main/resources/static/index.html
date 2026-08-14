@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DuoSpace — bizim küçük evrenimiz</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/styles.css" />
+</head>
+<body>
+  <div class="orb orb-one"></div><div class="orb orb-two"></div>
+  <main class="shell">
+    <nav class="topbar">
+      <a class="brand" href="#"><span class="brand-mark">♥</span><span>Duo<span>Space</span></span></a>
+      <div class="nav-actions"><span class="live-dot"></span><span class="online">İkiniz de buradasınız</span><button class="avatar">A</button></div>
+    </nav>
+
+    <section class="welcome-row">
+      <div><p class="eyebrow">15 Ağustos, Cuma · Date night</p><h1>Bu akşam <em>bizim.</em></h1><p class="subtle">Bir film seç, ışıkları kıs ve aynı anda başlat.</p></div>
+      <button class="soft-button" id="planButton">+ Yeni akşam planla</button>
+    </section>
+
+    <section class="dashboard">
+      <article class="watch-card">
+        <div class="movie-art"><div class="film-grain"></div><div class="art-copy"><span>TONIGHT'S PICK</span><h2>Before<br />Sunrise</h2><p>1995 · Romance · 1h 41m</p></div><button class="play-button" id="playButton" aria-label="Filmi başlat">▶</button></div>
+        <div class="watch-footer"><div><p class="tiny-label">BİRLİKTE İZLE</p><strong id="watchStatus">Henüz başlamadınız</strong></div><div class="progress-wrap"><div class="progress-track"><span id="progressBar"></span></div><small id="timeText">00:00 / 1:41:00</small></div><button class="round-button" id="likeButton" aria-label="Beğen">♡</button></div>
+      </article>
+
+      <aside class="date-card"><div class="sparkle">✦</div><p class="tiny-label">BU AKŞAMIN NOTU</p><h3>"Birlikte geçen zaman, en güzel yer."</h3><div class="date-line"><span>🍓</span><p>Atıştırmalıklar hazır mı?<br /><b>Çilek & sıcak çikolata</b></p></div><button class="text-button" id="noteButton">Notu düzenle →</button></aside>
+
+      <article class="queue-card"><div class="card-heading"><div><p class="tiny-label">BİRLİKTE LİSTE</p><h3>Sıradaki keyifler</h3></div><button class="icon-button" id="addMovie">+</button></div><ul id="movieList"><li><span class="mini-poster peach"></span><div><b>About Time</b><small>Film · %94 uyum</small></div><span class="drag">⋮⋮</span></li><li><span class="mini-poster purple"></span><div><b>It Takes Two</b><small>Oyun · Co-op</small></div><span class="drag">⋮⋮</span></li><li><span class="mini-poster yellow"></span><div><b>Midnight in Paris</b><small>Film · 1h 34m</small></div><span class="drag">⋮⋮</span></li></ul></article>
+
+      <article class="chat-card"><div class="card-heading"><div><p class="tiny-label">KÜÇÜK MESAJLAR</p><h3>Bizim köşemiz</h3></div><span class="heart-badge">♥</span></div><div class="messages" id="messages"><p class="message them">Filmi sen seç, ben patlamış mısırı hallederim 🥹<small>20:12</small></p><p class="message me">Anlaştık. Ama oyunda kaybeden tatlı ısmarlar!<small>20:13</small></p></div><form class="message-form" id="messageForm"><input id="messageInput" placeholder="Tatlı bir şey yaz..." maxlength="120" /><button aria-label="Gönder">↑</button></form></article>
+
+      <article class="game-card"><div class="game-icon">🎲</div><div><p class="tiny-label">OYUN MOLASI</p><h3>İki kişilik mini oyunlar</h3><p>Bir tur Uno mu, yoksa biraz rekabet mi?</p></div><button class="dark-button" id="gameButton">Oyun seç</button></article>
+    </section>
+  </main>
+  <div class="toast" id="toast" role="status"></div>
+  <script src="/assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+const toast = document.getElementById('toast');
+const showToast = message => { toast.textContent = message; toast.classList.add('show'); setTimeout(() => toast.classList.remove('show'), 2400); };
+let playing = false;
+document.getElementById('playButton').addEventListener('click', event => { playing = !playing; event.currentTarget.textContent = playing ? 'Ⅱ' : '▶'; document.getElementById('watchStatus').textContent = playing ? 'Birlikte izliyorsunuz ✦' : 'Duraklatıldı'; document.getElementById('progressBar').style.width = playing ? '32%' : '32%'; document.getElementById('timeText').textContent = playing ? '32:18 / 1:41:00' : '32:18 / 1:41:00'; showToast(playing ? 'Film ikiniz için de başlatıldı ✨' : 'Film duraklatıldı'); });
+document.getElementById('likeButton').addEventListener('click', event => { event.currentTarget.textContent = event.currentTarget.textContent === '♡' ? '♥' : '♡'; showToast('Listeye küçük bir kalp bıraktın'); });
+document.getElementById('planButton').addEventListener('click', () => showToast('Yeni date night fikri ekleme ekranı yakında burada!'));
+document.getElementById('noteButton').addEventListener('click', () => showToast('Notlarınız yakında ikinizle senkron olacak.'));
+document.getElementById('gameButton').addEventListener('click', () => showToast('İlk oyun: taş, kağıt, makas? 🎲'));
+document.getElementById('addMovie').addEventListener('click', () => { const item = document.createElement('li'); item.innerHTML = '<span class="mini-poster peach"></span><div><b>Yeni ortak seçim</b><small>Film · Listeye eklendi</small></div><span class="drag">⋮⋮</span>'; document.getElementById('movieList').prepend(item); showToast('Yeni film listenize eklendi'); });
+document.getElementById('messageForm').addEventListener('submit', event => { event.preventDefault(); const input = document.getElementById('messageInput'); const text = input.value.trim(); if (!text) return; const message = document.createElement('p'); message.className = 'message me'; message.innerHTML = `${text.replace(/[<>]/g, '')}<small>şimdi</small>`; document.getElementById('messages').append(message); input.value = ''; });

@@ -14,7 +14,7 @@
 docker compose up -d
 ```
 
-Veritabanı `localhost:5432` üzerinde çalışır. Yerel varsayılan bağlantı bilgileri `compose.yaml` içindedir.
+Bu komut PostgreSQL ile Spring API'yi birlikte çalıştırır. Arayüzü `http://localhost:8080` adresinde açabilirsin. Veritabanı `localhost:5432` üzerinde çalışır.
 
 ## Branch düzeni
 
