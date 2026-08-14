@@ -4,6 +4,8 @@ COPY .mvn .mvn
 COPY mvnw pom.xml ./
 RUN chmod +x mvnw && ./mvnw dependency:go-offline
 COPY src src
+COPY frontend frontend
+RUN mkdir -p src/main/resources/static && cp -R frontend/. src/main/resources/static/
 RUN ./mvnw package -DskipTests
 
 FROM eclipse-temurin:21-jre

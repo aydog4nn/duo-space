@@ -8,6 +8,10 @@
 - Spring Boot
 - PostgreSQL 17 (Docker)
 
+## Frontend
+
+Arayüz kaynakları kökteki `frontend/` klasöründedir. Docker build aşamasında bu dosyalar Spring Boot'un static kaynaklarına eklenir; uygulama tek container olarak `http://localhost:8080` üzerinden servis edilir.
+
 ## PostgreSQL'i başlatma
 
 ```bash
