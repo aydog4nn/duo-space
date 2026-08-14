@@ -20,6 +20,19 @@ Veritabanı `localhost:5432` üzerinde çalışır. Yerel varsayılan bağlantı
 
 Her küçük backend adımı ayrı bir `feature/...` branch'inde geliştirilir. Tamamlanan her adımda README güncellenir ve ayrı commit atılır.
 
+## Package düzeni
+
+```text
+controller/       REST controller sınıfları
+service/abs/      Service interface'leri
+service/impl/     Service implementasyonları
+repository/       Spring Data JPA repository'leri
+entity/           JPA entity ve enum sınıfları
+dto/              Request/response DTO'ları
+exception/        Global exception handler ve özel exception'lar
+config/           Security ve uygulama konfigürasyonu
+```
+
 ## Domain modeli
 
 İlk model `User`'dır. UUID kimlik, benzersiz kullanıcı adı ve e-posta, parola özeti ile oluşturulma/güncellenme zamanlarını tutar. Tablo şeması Flyway ile `V1__create_users_table.sql` migration'ında yönetilir.
