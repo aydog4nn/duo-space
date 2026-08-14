@@ -24,6 +24,25 @@ Her küçük backend adımı ayrı bir `feature/...` branch'inde geliştirilir. 
 
 İlk model `User`'dır. UUID kimlik, benzersiz kullanıcı adı ve e-posta, parola özeti ile oluşturulma/güncellenme zamanlarını tutar. Tablo şeması Flyway ile `V1__create_users_table.sql` migration'ında yönetilir.
 
+## Kayıt endpoint'i
+
+`POST /api/v1/auth/register` kullanıcı oluşturur. Parolalar BCrypt ile hashlenir; yalın parola hiçbir zaman veritabanına yazılmaz.
+
+```json
+{
+  "username": "akin",
+  "email": "akin@example.com",
+  "password": "guclu-bir-parola"
+}
+```
+
+## Temel CRUD
+
+- `POST/GET/PUT/DELETE /api/v1/rooms`
+- `POST/GET/PUT/DELETE /api/v1/rooms/{roomId}/watchlist`
+
+Bu geçici CRUD aşamasında sahiplik kimliği request ile gelir. JWT eklendiğinde bu bilgi token'dan alınacak ve endpoint'ler yetkilendirilecek.
+
 ## Sıradaki adım
 
-`UserRepository` ve kayıt için service katmanını eklemek.
+CRUD endpoint testlerini eklemek; ardından JWT ile giriş ve endpoint yetkilendirmesine geçmek.
