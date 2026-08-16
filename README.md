@@ -1,64 +1,45 @@
 # DuoSpace
 
-DuoSpace, çiftlerin birlikte film izleyebileceği, ortak listeler oluşturabileceği, mesajlaşabileceği ve mini oyunlar oynayabileceği bir web uygulaması temelidir.
+Bu proje, çiftlerin birlikte film izleyebilmesi, izlenecekler listesi hazırlaması ve ileride beraber oyun oynayabilmesi için başladığım bir web projesi.
 
-Şu an proje; görsel bir çift dashboard'u, Spring Boot REST API altyapısı, PostgreSQL şeması ve Docker ile tek komutta çalışan geliştirme ortamını içerir.
+Şu an backend tarafında kullanıcı kaydı, giriş işlemi, JWT ile korunan endpointler, oda ve watchlist işlemleri var. Frontend tarafında da projenin nasıl görüneceğini göstermek için basit bir ana sayfa bulunuyor.
 
-## Özellikler
+## Kullanılan teknolojiler
 
-- Birlikte izleme için film ekranı ve ortak izleme listesi arayüzü
-- Oda ve watchlist CRUD API altyapısı
-- Kullanıcı kaydı ve BCrypt parola hashleme
-- Flyway ile versiyonlanmış PostgreSQL migration'ları
-- Responsive, romantik çift sitesi frontend'i
-- Spring API + PostgreSQL için Docker Compose paketi
+- Java 21 ve Spring Boot
+- Spring Data JPA, Spring Security, Validation
+- PostgreSQL ve Flyway
+- Docker Compose
+- HTML, CSS ve JavaScript
 
-## Teknolojiler
-
-- Java 21 / Spring Boot
-- Spring Data JPA, Spring Security, Validation, WebSocket
-- PostgreSQL 17 / Flyway
-- Docker & Docker Compose
-- Vanilla HTML, CSS ve JavaScript
-
-## Proje yapısı
+## Klasör yapısı
 
 ```text
-frontend/                 Arayüz kaynak dosyaları
+frontend/                 Frontend dosyaları
 src/main/java/
-  config/                 Uygulama ve security ayarları
-  controller/             REST controller'lar
-  dto/                    Request/response DTO'ları
-  entity/                 JPA entity ve enum'ları
-  exception/              Global hata yönetimi
-  repository/             Spring Data repository'leri
+  config/                 Security ve JWT ayarları
+  controller/             Endpointler
+  dto/                    Request ve response sınıfları
+  entity/                 Veritabanı entity sınıfları
+  exception/              Hata yönetimi
+  repository/             Repository sınıfları
   service/abs/            Service interface'leri
   service/impl/           Service implementasyonları
 src/main/resources/
-  db/migration/           Flyway SQL migration'ları
-Dockerfile                Spring API image tanımı
-compose.yaml              API + PostgreSQL geliştirme ortamı
+  db/migration/           Flyway migration dosyaları
+Dockerfile                Uygulama image dosyası
+compose.yaml              API ve PostgreSQL ayarları
 ```
 
-## Hızlı başlangıç
+## Çalıştırma
 
-Docker Desktop açıkken:
+Docker Desktop açıkken proje klasöründe şunu çalıştırmak yeterli:
 
 ```bash
 docker compose up --build -d
 ```
 
-Ardından uygulamayı aç:
-
-```text
-http://localhost:8080
-```
-
-Container durumunu görmek için:
-
-```bash
-docker compose ps
-```
+Uygulama: `http://localhost:8080`
 
 Kapatmak için:
 
@@ -66,31 +47,40 @@ Kapatmak için:
 docker compose down
 ```
 
-## Geliştirme notları
+## API tarafı
 
-- Frontend kaynakları `frontend/` altındadır. Docker build sürecinde Spring Boot static kaynaklarına eklenir.
-- Yerelde Spring Boot çalışırken `frontend/` dosyaları doğrudan servis edilir.
-- Veritabanı `localhost:5432` üzerinde çalışır; yerel geliştirme bilgileri `compose.yaml` içindedir.
-- Yeni şema değişiklikleri için mevcut migration dosyası değiştirilmez; yeni bir `V{n}__description.sql` dosyası eklenir.
-
-## API özeti
-
-| Alan | Endpoint |
+| İşlem | Endpoint |
 | --- | --- |
-| Kayıt | `POST /api/v1/auth/register` |
+| Kullanıcı kaydı | `POST /api/v1/auth/register` |
+| Giriş | `POST /api/v1/auth/login` |
 | Odalar | `POST/GET/PUT/DELETE /api/v1/rooms` |
-| Ortak liste | `POST/GET/PUT/DELETE /api/v1/rooms/{roomId}/watchlist` |
+| Watchlist | `POST/GET/PUT/DELETE /api/v1/rooms/{roomId}/watchlist` |
 
-> JWT henüz eklenmediği için oda ve watchlist işlemlerindeki kullanıcı bilgisi geçici olarak request üzerinden alınır. JWT aşamasında bu bilgi doğrulanmış token'dan gelecektir.
+Giriş yaptıktan sonra dönen token, korunan endpointlere giderken header'a eklenmeli:
 
-## Yol haritası
+```text
+Authorization: Bearer <access-token>
+```
 
-1. CRUD endpoint integration testleri
-2. JWT tabanlı giriş ve yetkilendirme
-3. WebSocket ile chat ve izleme senkronizasyonu
-4. Ortak oyun odaları
-5. CI/CD ve production deployment
+Oda oluştururken `ownerId`, watchlist eklerken de `addedById` göndermiyoruz. Bunlar token içindeki kullanıcıdan alınıyor. Oda sahibinin odayı düzenleme ve silme yetkisi var; oda üyeleri ise odayı ve ortak listeyi görebiliyor.
 
-## Branch yaklaşımı
+## JWT ayarı
 
-Her bağımsız iş `feature/...`, `refactor/...`, `docs/...` veya `chore/...` branch'inde geliştirilir; testten sonra commitlenir ve `main`e alınır.
+Yerelde varsayılan bir anahtar ile çalışıyor. Deploy ederken kendi Base64 JWT anahtarını environment variable olarak vermek gerekiyor:
+
+```bash
+JWT_SECRET=<base64-secret>
+JWT_ACCESS_TOKEN_EXPIRATION=PT15M
+```
+
+## Sonraki işler
+
+1. Refresh token ve şifre yenileme
+2. Chat için WebSocket
+3. Aynı anda film izleme senkronu
+4. Basit oyun odaları
+5. CI/CD ve deploy
+
+## Branch düzeni
+
+Her işi ayrı bir branch'te yapıp bitince `main` branch'ine alıyorum.
