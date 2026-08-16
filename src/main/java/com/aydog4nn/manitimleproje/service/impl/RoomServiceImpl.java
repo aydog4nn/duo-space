@@ -11,6 +11,7 @@ import com.aydog4nn.manitimleproje.entity.RoomMember;
 import com.aydog4nn.manitimleproje.repository.RoomMemberRepository;
 import com.aydog4nn.manitimleproje.repository.RoomRepository;
 import com.aydog4nn.manitimleproje.service.abs.RoomService;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,26 +32,48 @@ public class RoomServiceImpl implements RoomService {
     }
 
     @Transactional
-    @Override public RoomResponse create(CreateRoomRequest request) {
-        User owner = userRepository.findById(request.ownerId()).orElseThrow(() -> new ResourceNotFoundException("User", request.ownerId()));
+    @Override public RoomResponse create(UUID currentUserId, CreateRoomRequest request) {
+        User owner = userRepository.findById(currentUserId).orElseThrow(() -> new ResourceNotFoundException("User", currentUserId));
         Room room = roomRepository.save(Room.create(request.name().trim(), UUID.randomUUID().toString().replace("-", "").substring(0, 12), owner));
         roomMemberRepository.save(RoomMember.owner(room, owner));
         return toResponse(room);
     }
 
-    @Override public RoomResponse get(UUID roomId) { return toResponse(findRoom(roomId)); }
-    @Override public List<RoomResponse> listByOwner(UUID ownerId) { return roomRepository.findByOwner_Id(ownerId).stream().map(this::toResponse).toList(); }
+    @Override public RoomResponse get(UUID currentUserId, UUID roomId) {
+        Room room = findRoom(roomId);
+        requireMembership(room, currentUserId);
+        return toResponse(room);
+    }
+
+    @Override public List<RoomResponse> list(UUID currentUserId) {
+        return roomRepository.findAccessibleByUserId(currentUserId).stream().map(this::toResponse).toList();
+    }
 
     @Transactional
-    @Override public RoomResponse update(UUID roomId, UpdateRoomRequest request) {
+    @Override public RoomResponse update(UUID currentUserId, UUID roomId, UpdateRoomRequest request) {
         Room room = findRoom(roomId);
+        requireOwnership(room, currentUserId);
         room.rename(request.name().trim());
         return toResponse(room);
     }
 
     @Transactional
-    @Override public void delete(UUID roomId) { roomRepository.delete(findRoom(roomId)); }
+    @Override public void delete(UUID currentUserId, UUID roomId) {
+        Room room = findRoom(roomId);
+        requireOwnership(room, currentUserId);
+        roomRepository.delete(room);
+    }
 
     private Room findRoom(UUID id) { return roomRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Room", id)); }
+    private void requireMembership(Room room, UUID userId) {
+        if (!roomMemberRepository.existsByRoom_IdAndUser_Id(room.getId(), userId)) {
+            throw new AccessDeniedException("Room membership is required");
+        }
+    }
+    private void requireOwnership(Room room, UUID userId) {
+        if (!room.getOwner().getId().equals(userId)) {
+            throw new AccessDeniedException("Room ownership is required");
+        }
+    }
     private RoomResponse toResponse(Room room) { return new RoomResponse(room.getId(), room.getName(), room.getInviteCode(), room.getOwner().getId(), room.getCreatedAt()); }
 }

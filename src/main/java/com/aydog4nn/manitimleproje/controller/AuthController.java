@@ -1,5 +1,7 @@
 package com.aydog4nn.manitimleproje.controller;
 
+import com.aydog4nn.manitimleproje.dto.auth.AuthTokenResponse;
+import com.aydog4nn.manitimleproje.dto.auth.LoginRequest;
 import com.aydog4nn.manitimleproje.dto.auth.RegisterRequest;
 import com.aydog4nn.manitimleproje.dto.auth.RegisteredUserResponse;
 import com.aydog4nn.manitimleproje.service.abs.AuthService;
@@ -25,5 +27,10 @@ public class AuthController {
     @ResponseStatus(HttpStatus.CREATED)
     public RegisteredUserResponse register(@Valid @RequestBody RegisterRequest request) {
         return authService.register(request);
+    }
+
+    @PostMapping("/login")
+    public AuthTokenResponse login(@Valid @RequestBody LoginRequest request) {
+        return authService.login(request);
     }
 }

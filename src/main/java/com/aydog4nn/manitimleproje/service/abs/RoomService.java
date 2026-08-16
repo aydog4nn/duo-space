@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.UUID;
 
 public interface RoomService {
-    RoomResponse create(CreateRoomRequest request);
-    RoomResponse get(UUID roomId);
-    List<RoomResponse> listByOwner(UUID ownerId);
-    RoomResponse update(UUID roomId, UpdateRoomRequest request);
-    void delete(UUID roomId);
+    RoomResponse create(UUID currentUserId, CreateRoomRequest request);
+    RoomResponse get(UUID currentUserId, UUID roomId);
+    List<RoomResponse> list(UUID currentUserId);
+    RoomResponse update(UUID currentUserId, UUID roomId, UpdateRoomRequest request);
+    void delete(UUID currentUserId, UUID roomId);
 }

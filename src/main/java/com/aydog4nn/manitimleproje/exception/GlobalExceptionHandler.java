@@ -2,6 +2,7 @@ package com.aydog4nn.manitimleproje.exception;
 
 import com.aydog4nn.manitimleproje.exception.DuplicateUserException;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -19,6 +20,14 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     ApiError handleNotFound(ResourceNotFoundException exception) { return new ApiError(exception.getMessage()); }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    ApiError handleInvalidCredentials(InvalidCredentialsException exception) { return new ApiError(exception.getMessage()); }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    @ResponseStatus(HttpStatus.FORBIDDEN)
+    ApiError handleAccessDenied(AccessDeniedException exception) { return new ApiError("Bu işlem için yetkin yok."); }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)

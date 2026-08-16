@@ -60,6 +60,10 @@ public class User {
         return email;
     }
 
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
     @PrePersist
     void onCreate() {
         Instant now = Instant.now();

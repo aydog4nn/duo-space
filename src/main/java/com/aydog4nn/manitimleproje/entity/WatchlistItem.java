@@ -25,6 +25,7 @@ public class WatchlistItem {
     public void update(String title, String sourceUrl, WatchlistStatus status) { this.title = title; this.sourceUrl = sourceUrl; this.status = status; }
     @PrePersist void onCreate() { createdAt = Instant.now(); }
     public UUID getId() { return id; }
+    public Room getRoom() { return room; }
     public String getTitle() { return title; }
     public String getSourceUrl() { return sourceUrl; }
     public WatchlistStatus getStatus() { return status; }

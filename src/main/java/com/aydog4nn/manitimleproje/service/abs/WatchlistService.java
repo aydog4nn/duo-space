@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.UUID;
 
 public interface WatchlistService {
-    WatchlistItemResponse create(UUID roomId, CreateWatchlistItemRequest request);
-    List<WatchlistItemResponse> list(UUID roomId);
-    WatchlistItemResponse update(UUID itemId, UpdateWatchlistItemRequest request);
-    void delete(UUID itemId);
+    WatchlistItemResponse create(UUID currentUserId, UUID roomId, CreateWatchlistItemRequest request);
+    List<WatchlistItemResponse> list(UUID currentUserId, UUID roomId);
+    WatchlistItemResponse update(UUID currentUserId, UUID itemId, UpdateWatchlistItemRequest request);
+    void delete(UUID currentUserId, UUID itemId);
 }
