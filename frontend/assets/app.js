@@ -59,6 +59,22 @@ document.getElementById('authForm').addEventListener('submit', async event => {
 document.getElementById('createRoomForm').addEventListener('submit', async event => { event.preventDefault(); try { saveRoom(await request('/rooms', { method: 'POST', body: JSON.stringify({ name: document.getElementById('roomName').value.trim() }) })); showConnectedRoom(); await loadWatchlist(); showToast('Odan hazır, davet kodunu paylaşabilirsin.'); } catch (error) { showToast(error.message); } });
 document.getElementById('joinRoomForm').addEventListener('submit', async event => { event.preventDefault(); try { saveRoom(await request('/rooms/join', { method: 'POST', body: JSON.stringify({ inviteCode: document.getElementById('inviteCode').value.trim() }) })); showConnectedRoom(); await loadWatchlist(); showToast('Odaya katıldın.'); } catch (error) { showToast(error.message); } });
 document.getElementById('logoutButton').addEventListener('click', () => { state.token = null; state.room = null; localStorage.removeItem('duoSpaceToken'); localStorage.removeItem('duoSpaceRoom'); showAuth(); showToast('Çıkış yapıldı.'); });
+function renderMovieResults(movies) {
+  const container = document.getElementById('movieSearchResults'); container.replaceChildren();
+  if (!movies.length) { container.textContent = 'Sonuç bulunamadı.'; return; }
+  movies.forEach(movie => {
+    const button = document.createElement('button'); button.type = 'button'; button.className = 'movie-search-result';
+    if (movie.posterUrl) { const poster = document.createElement('img'); poster.src = movie.posterUrl; poster.alt = ''; button.append(poster); }
+    const copy = document.createElement('span'); const title = document.createElement('b'); title.textContent = movie.title; const detail = document.createElement('small'); detail.textContent = `${movie.releaseYear || 'Yıl bilgisi yok'} · TMDB puanı ${movie.voteAverage?.toFixed(1) || '-'}`; copy.append(title, detail); button.append(copy);
+    button.addEventListener('click', () => { document.getElementById('movieTitle').value = movie.title; document.getElementById('movieSourceUrl').value = `https://www.themoviedb.org/movie/${movie.tmdbId}`; container.replaceChildren(); showToast('Film seçildi, şimdi listeye ekleyebilirsin.'); });
+    container.append(button);
+  });
+}
+document.getElementById('searchMovieButton').addEventListener('click', async () => {
+  const query = document.getElementById('movieSearchQuery').value.trim();
+  if (query.length < 2) return showToast('Film aramak için en az 2 karakter yaz.');
+  try { renderMovieResults(await request(`/movies/search?query=${encodeURIComponent(query)}`)); } catch (error) { showToast(error.message); }
+});
 document.getElementById('addMovie').addEventListener('click', () => { if (!state.token || !state.room) return showToast('Önce giriş yapıp bir oda seçmelisin.'); movieDialog.showModal(); });
 document.getElementById('movieForm').addEventListener('submit', async event => { event.preventDefault(); try { await request(`/rooms/${state.room.id}/watchlist`, { method: 'POST', body: JSON.stringify({ title: document.getElementById('movieTitle').value.trim(), sourceUrl: document.getElementById('movieSourceUrl').value.trim() || null }) }); movieDialog.close(); event.currentTarget.reset(); await loadWatchlist(); showToast('Listeye eklendi.'); } catch (error) { showToast(error.message); } });
 let playing = false;

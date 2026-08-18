@@ -29,6 +29,10 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     ApiError handleInvalidCredentials(InvalidCredentialsException exception) { return new ApiError(exception.getMessage()); }
 
+    @ExceptionHandler(MovieApiException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    ApiError handleMovieApi(MovieApiException exception) { return new ApiError(exception.getMessage()); }
+
     @ExceptionHandler(AccessDeniedException.class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     ApiError handleAccessDenied(AccessDeniedException exception) { return new ApiError("Bu işlem için yetkin yok."); }

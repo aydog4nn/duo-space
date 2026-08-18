@@ -82,6 +82,18 @@ JWT_SECRET=<base64-secret>
 JWT_ACCESS_TOKEN_EXPIRATION=PT15M
 ```
 
+## TMDB film araması
+
+Film araması backend üzerinden TMDB'ye gider. TMDB hesabındaki **API Read Access Token** değerini environment variable olarak ver:
+
+```bash
+TMDB_API_READ_ACCESS_TOKEN=<tmdb-read-access-token>
+```
+
+Docker ile çalışırken proje kökünde `.env` dosyası oluşturup aynı değeri oraya koyabilirsin. `.env.example` sadece örnek dosyadır; gerçek anahtarı GitHub'a göndermemelisin.
+
+Anahtar frontend'e gönderilmez. Film arama endpointi `GET /api/v1/movies/search?query=...` şeklindedir ve JWT ister.
+
 ## Sonraki işler
 
 1. Refresh token ve şifre yenileme
