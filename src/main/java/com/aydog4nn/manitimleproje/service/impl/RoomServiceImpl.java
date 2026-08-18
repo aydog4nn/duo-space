@@ -1,9 +1,11 @@
 package com.aydog4nn.manitimleproje.service.impl;
 
 import com.aydog4nn.manitimleproje.exception.ResourceNotFoundException;
+import com.aydog4nn.manitimleproje.exception.RoomJoinException;
 import com.aydog4nn.manitimleproje.entity.User;
 import com.aydog4nn.manitimleproje.repository.UserRepository;
 import com.aydog4nn.manitimleproje.dto.room.CreateRoomRequest;
+import com.aydog4nn.manitimleproje.dto.room.JoinRoomRequest;
 import com.aydog4nn.manitimleproje.dto.room.RoomResponse;
 import com.aydog4nn.manitimleproje.dto.room.UpdateRoomRequest;
 import com.aydog4nn.manitimleproje.entity.Room;
@@ -36,6 +38,24 @@ public class RoomServiceImpl implements RoomService {
         User owner = userRepository.findById(currentUserId).orElseThrow(() -> new ResourceNotFoundException("User", currentUserId));
         Room room = roomRepository.save(Room.create(request.name().trim(), UUID.randomUUID().toString().replace("-", "").substring(0, 12), owner));
         roomMemberRepository.save(RoomMember.owner(room, owner));
+        return toResponse(room);
+    }
+
+    @Transactional
+    @Override public RoomResponse join(UUID currentUserId, JoinRoomRequest request) {
+        Room room = roomRepository.findByInviteCode(request.inviteCode().trim())
+                .orElseThrow(() -> new RoomJoinException("Davet kodu geçersiz."));
+
+        if (roomMemberRepository.existsByRoom_IdAndUser_Id(room.getId(), currentUserId)) {
+            throw new RoomJoinException("Bu odaya zaten katıldın.");
+        }
+        if (roomMemberRepository.countByRoom_Id(room.getId()) >= 2) {
+            throw new RoomJoinException("Bu oda dolu.");
+        }
+
+        User user = userRepository.findById(currentUserId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", currentUserId));
+        roomMemberRepository.save(RoomMember.member(room, user));
         return toResponse(room);
     }
 

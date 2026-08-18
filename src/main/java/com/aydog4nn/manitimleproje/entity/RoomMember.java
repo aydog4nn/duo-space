@@ -19,5 +19,6 @@ public class RoomMember {
     protected RoomMember() {}
     private RoomMember(Room room, User user, RoomMemberRole role) { this.room = room; this.user = user; this.role = role; }
     public static RoomMember owner(Room room, User user) { return new RoomMember(room, user, RoomMemberRole.OWNER); }
+    public static RoomMember member(Room room, User user) { return new RoomMember(room, user, RoomMemberRole.MEMBER); }
     @PrePersist void onCreate() { joinedAt = Instant.now(); }
 }

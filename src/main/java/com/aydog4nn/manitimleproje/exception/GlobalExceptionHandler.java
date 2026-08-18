@@ -21,6 +21,10 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     ApiError handleNotFound(ResourceNotFoundException exception) { return new ApiError(exception.getMessage()); }
 
+    @ExceptionHandler(RoomJoinException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    ApiError handleRoomJoin(RoomJoinException exception) { return new ApiError(exception.getMessage()); }
+
     @ExceptionHandler(InvalidCredentialsException.class)
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     ApiError handleInvalidCredentials(InvalidCredentialsException exception) { return new ApiError(exception.getMessage()); }
