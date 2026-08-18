@@ -2,7 +2,7 @@
 
 Bu proje, çiftlerin birlikte film izleyebilmesi, izlenecekler listesi hazırlaması ve ileride beraber oyun oynayabilmesi için başladığım bir web projesi.
 
-Şu an backend tarafında kullanıcı kaydı, giriş işlemi, JWT ile korunan endpointler, oda ve watchlist işlemleri var. Frontend tarafında da projenin nasıl görüneceğini göstermek için basit bir ana sayfa bulunuyor.
+Şu an backend tarafında kullanıcı kaydı, giriş işlemi, JWT ile korunan endpointler, oda ve watchlist işlemleri var. Frontend üzerinden kayıt/giriş yapılabiliyor; oda oluşturup davet kodu ile eşini odaya alabiliyor ve ortak listeye film ya da oyun ekleyebiliyorsun.
 
 ## Kullanılan teknolojiler
 
@@ -40,6 +40,8 @@ docker compose up --build -d
 ```
 
 Uygulama: `http://localhost:8080`
+
+Tarayıcıda ilk açılışta kayıt ol veya giriş yap. Ardından oda oluşturup ekranda çıkan davet kodunu diğer kullanıcıyla paylaşabilirsin. Odaya katılan kullanıcı aynı ortak listeyi görür; `+` ile eklenen seçimler veritabanına yazılır.
 
 Kapatmak için:
 
