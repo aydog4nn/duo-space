@@ -54,6 +54,7 @@ docker compose down
 | Kullanıcı kaydı | `POST /api/v1/auth/register` |
 | Giriş | `POST /api/v1/auth/login` |
 | Odalar | `POST/GET/PUT/DELETE /api/v1/rooms` |
+| Odaya katılma | `POST /api/v1/rooms/join` |
 | Watchlist | `POST/GET/PUT/DELETE /api/v1/rooms/{roomId}/watchlist` |
 
 Giriş yaptıktan sonra dönen token, korunan endpointlere giderken header'a eklenmeli:
@@ -63,6 +64,8 @@ Authorization: Bearer <access-token>
 ```
 
 Oda oluştururken `ownerId`, watchlist eklerken de `addedById` göndermiyoruz. Bunlar token içindeki kullanıcıdan alınıyor. Oda sahibinin odayı düzenleme ve silme yetkisi var; oda üyeleri ise odayı ve ortak listeyi görebiliyor.
+
+Odaya katılmak için `POST /api/v1/rooms/join` endpointine `inviteCode` gönderilir. Bir odaya en fazla iki kullanıcı katılabilir.
 
 ## JWT ayarı
 

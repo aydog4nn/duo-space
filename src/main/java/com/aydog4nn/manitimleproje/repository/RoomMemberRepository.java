@@ -6,4 +6,5 @@ import java.util.UUID;
 
 public interface RoomMemberRepository extends JpaRepository<RoomMember, UUID> {
     boolean existsByRoom_IdAndUser_Id(UUID roomId, UUID userId);
+    long countByRoom_Id(UUID roomId);
 }
