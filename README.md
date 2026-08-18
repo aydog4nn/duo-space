@@ -46,6 +46,14 @@ Kapatmak için:
 docker compose down
 ```
 
+## Test
+
+Film arama servisinin TMDB'den gelen veriyi doğru dönüştürdüğünü, gerçek TMDB'ye bağlanmadan test ediyoruz. Test sırasında lokal bir sahte TMDB cevabı kullanılıyor.
+
+```bash
+./mvnw test
+```
+
 ## Uygulama akışı
 
 1. Ana sayfadan kayıt ol veya giriş yap.
