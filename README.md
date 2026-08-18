@@ -41,6 +41,10 @@ docker compose up --build -d
 
 Uygulama: `http://localhost:8080`
 
+Swagger API dokümantasyonu: `http://localhost:8080/swagger-ui/api-docs.html`
+
+Swagger üzerinden korumalı endpointleri denemek için önce `/api/v1/auth/login` ile giriş yap. Dönen `accessToken` değerini sağ üstteki `Authorize` butonuna `Bearer <token>` şeklinde ekle.
+
 Tarayıcıda ilk açılışta kayıt ol veya giriş yap. Ardından oda oluşturup ekranda çıkan davet kodunu diğer kullanıcıyla paylaşabilirsin. Odaya katılan kullanıcı aynı ortak listeyi görür; `+` ile eklenen seçimler veritabanına yazılır.
 
 Kapatmak için:
