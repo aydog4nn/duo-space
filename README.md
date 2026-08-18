@@ -1,44 +1,118 @@
 # DuoSpace
 
-DuoSpace, iki kişinin ortak film listesi hazırlayabilmesi için yaptığım Spring Boot projesi. Kullanıcılar kayıt olur, kendi odasını oluşturur veya davet koduyla odaya katılır. Aynı odadaki kişiler ortak listeyi birlikte yönetir.
+DuoSpace, iki kullanıcının davet kodu ile aynı odaya bağlanıp ortak bir izleme listesi yönetmesi için geliştirilmiş containerized bir Spring Boot REST API projesidir. Film arama verisi TMDB'den alınır; kullanıcı, oda ve izleme listesi verileri PostgreSQL'de tutulur.
 
-## Şu an neler var?
+## Teknik özet
 
-- Kayıt olma ve giriş yapma
-- JWT ile korunan endpointler
-- Oda oluşturma, davet kodu ile odaya katılma
-- Ortak izleme listesine ekleme, listeleme, güncelleme ve silme
-- TMDB üzerinden film arama
-- Swagger ile API dokümantasyonu
-- PostgreSQL, Flyway ve Docker Compose kurulumu
+- Java 21, Spring Boot 4
+- Spring Web MVC, Spring Data JPA, Bean Validation
+- Spring Security + stateless JWT authentication
+- PostgreSQL 17, Flyway migration
+- Springdoc OpenAPI / Swagger UI
+- Docker ve Docker Compose
+- TMDB REST API entegrasyonu (`RestClient`)
+- Vanilla HTML/CSS/JavaScript istemcisi
 
-## Teknolojiler
+## Mimari
 
-- Java 21, Spring Boot
-- Spring Security, Spring Data JPA, Validation
-- PostgreSQL ve Flyway
-- Springdoc OpenAPI / Swagger
-- Docker Compose
-- HTML, CSS, JavaScript
+Uygulama katmanlı yapı ile tasarlandı. HTTP katmanı yalnızca request/response yönetir; iş kuralları service katmanında, kalıcı veri işlemleri repository katmanında tutulur.
 
-## Hızlı başlangıç
-
-Önce `.env.example` dosyasını kopyalayıp proje kökünde `.env` oluştur:
-
-```env
-TMDB_API_READ_ACCESS_TOKEN=buraya-tmdb-read-token
+```text
+Browser
+  │
+  ├── Static frontend (HTML / CSS / JavaScript)
+  │
+  ▼
+Spring Boot API
+  ├── Controller     HTTP endpointleri ve request validation
+  ├── Service        iş kuralları, yetki ve oda kontrolleri
+  ├── Repository     JPA tabanlı veri erişimi
+  ├── Security       JWT filter ve SecurityFilterChain
+  └── Integration    TMDB movie search client
+          │                    │
+          ▼                    ▼
+     PostgreSQL               TMDB API
 ```
 
-TMDB token olmadan uygulama çalışır; sadece film araması sonuç vermez.
+Paket yapısı:
 
-Sonra Docker Desktop açıkken:
+```text
+config/           JWT, Security, OpenAPI ve TMDB ayarları
+controller/       REST endpointleri
+dto/              API request / response modelleri
+entity/           JPA entity'leri
+repository/       Spring Data repository'leri
+service/abs/      Service sözleşmeleri
+service/impl/     İş kurallarının implementasyonları
+exception/        Merkezi hata yönetimi
+db/migration/     Flyway SQL migration'ları
+frontend/         Uygulamanın statik istemcisi
+```
+
+## Domain modeli ve kurallar
+
+Temel ilişki `User -> RoomMember -> Room` şeklindedir. Bir oda en fazla iki üyeye sahip olabilir. Odaya katılım benzersiz davet kodu üzerinden yapılır; aynı kullanıcının aynı odaya ikinci kez eklenmesi veritabanı kısıtıyla da engellenir.
+
+`WatchlistItem`, bir odaya ve ekleyen kullanıcıya bağlıdır. Oda silinirse bağlı üyeler ve liste kayıtları `ON DELETE CASCADE` ile temizlenir.
+
+```text
+User 1 --- * RoomMember * --- 1 Room 1 --- * WatchlistItem
+                         \
+                          role: OWNER | MEMBER
+```
+
+## Kimlik doğrulama ve yetkilendirme
+
+- Kayıt ve giriş endpointleri BCrypt ile hashlenmiş parola kullanır.
+- Başarılı giriş sonrasında backend imzalı access token üretir.
+- `JwtAuthenticationFilter`, her istekte `Authorization: Bearer <token>` başlığını doğrular ve kullanıcı kimliğini `SecurityContext` içine yerleştirir.
+- API stateless çalışır; sunucuda HTTP session tutulmaz.
+- `/api/v1/auth/**`, frontend asset'leri ve Swagger dışındaki endpointler kimlik doğrulaması ister.
+- Oda ve watchlist işlemlerinde sadece oda üyesi olan kullanıcılar işlem yapabilir.
+- TMDB erişim anahtarı istemciye gönderilmez; yalnızca backend environment variable'ı olarak okunur. `.env` dosyası Git tarafından takip edilmez.
+
+## API yüzeyi
+
+| Alan | Endpoint | Amaç |
+| --- | --- | --- |
+| Auth | `POST /api/v1/auth/register` | Kullanıcı oluşturur |
+| Auth | `POST /api/v1/auth/login` | JWT access token döner |
+| Room | `POST /api/v1/rooms` | Yeni oda oluşturur |
+| Room | `POST /api/v1/rooms/join` | Davet kodu ile odaya katılır |
+| Room | `GET /api/v1/rooms/{roomId}` | Oda bilgisini getirir |
+| Watchlist | `/api/v1/rooms/{roomId}/watchlist` | Ortak liste CRUD işlemleri |
+| Movie catalog | `GET /api/v1/movies/search?query=...` | TMDB üzerinde film arar |
+
+Detaylı request/response şemaları için Swagger UI kullanılabilir.
+
+## Local olarak çalıştırma
+
+### Gereksinimler
+
+- Docker Desktop
+- TMDB API Read Access Token (film arama özelliği için)
+
+Önce örnek dosyayı kopyalayıp kendi token'ını ekle:
+
+```bash
+cp .env.example .env
+```
+
+```env
+TMDB_API_READ_ACCESS_TOKEN=your_tmdb_read_access_token
+```
+
+Ardından container'ları başlat:
 
 ```bash
 docker compose up --build -d
 ```
 
-- Uygulama: `http://localhost:8080`
-- Swagger: `http://localhost:8080/swagger-ui/api-docs.html`
+| Adres | Açıklama |
+| --- | --- |
+| `http://localhost:8080` | Frontend ve API |
+| `http://localhost:8080/swagger-ui/api-docs.html` | Swagger UI |
+| `localhost:5432` | PostgreSQL |
 
 Kapatmak için:
 
@@ -46,62 +120,14 @@ Kapatmak için:
 docker compose down
 ```
 
-## Test
-
-Film arama servisinin TMDB'den gelen veriyi doğru dönüştürdüğünü, gerçek TMDB'ye bağlanmadan test ediyoruz. Test sırasında lokal bir sahte TMDB cevabı kullanılıyor.
+## Testler
 
 ```bash
 ./mvnw test
 ```
 
-## Uygulama akışı
+Test paketi JWT üretim/doğrulama, odaya katılma kuralları ve TMDB response mapping senaryolarını içerir. TMDB mapping testi gerçek ağa bağımlı değildir; lokal sahte HTTP sunucusundan dönen response ile çalışır.
 
-1. Ana sayfadan kayıt ol veya giriş yap.
-2. Yeni oda oluştur ya da gelen davet kodunu kullan.
-3. Ortak liste kartındaki `+` butonuna bas.
-4. TMDB'de bir film ara, sonucu seç ve listeye ekle.
-5. Eklenen kayıt PostgreSQL içindeki `watchlist_items` tablosunda tutulur.
+## Notlar ve roadmap
 
-## API kısa özeti
-
-| İş | Endpoint |
-| --- | --- |
-| Kayıt ol | `POST /api/v1/auth/register` |
-| Giriş yap | `POST /api/v1/auth/login` |
-| Oda işlemleri | `/api/v1/rooms` |
-| Odaya katıl | `POST /api/v1/rooms/join` |
-| Ortak liste | `/api/v1/rooms/{roomId}/watchlist` |
-| Film ara | `GET /api/v1/movies/search?query=...` |
-
-`/auth/**` dışındaki endpointler JWT ister. Swagger'da önce giriş endpointini çalıştırıp dönen `accessToken` değerini `Authorize` alanına ekleyebilirsin.
-
-## Güvenlik notları
-
-- Kullanıcı şifreleri BCrypt ile saklanır.
-- JWT ile kimlik doğrulama yapılır; oda ve liste işlemlerinde üyelik kontrol edilir.
-- TMDB token sadece backend environment variable'ında bulunur. `.env` dosyası Git'e eklenmez.
-- Film arama endpointi de JWT olmadan çağrılamaz.
-
-## Klasör yapısı
-
-```text
-frontend/                 Arayüz dosyaları
-src/main/java/
-  config/                 JWT, Swagger ve dış servis ayarları
-  controller/             HTTP endpointleri
-  dto/                    Request ve response sınıfları
-  entity/                 Veritabanı modelleri
-  repository/             Veritabanı sorguları
-  service/abs/            Service interface'leri
-  service/impl/           Service implementasyonları
-  exception/              Hata cevapları
-src/main/resources/db/migration/  Flyway migration dosyaları
-```
-
-## Sonraki işler
-
-- Watchlist kartlarında film afişi ve izleme durumu arayüzü
-- Chat için WebSocket
-- Aynı anda izleme senkronu
-- Refresh token ve şifre yenileme
-- CI/CD ve deploy
+Şu an JWT access token tabanlı authentication uygulanıyor. Production sürümünde refresh token rotasyonu, rate limiting, audit logging, CI/CD pipeline ve WebSocket tabanlı gerçek zamanlı chat / izleme senkronizasyonu eklenmesi planlanıyor.
