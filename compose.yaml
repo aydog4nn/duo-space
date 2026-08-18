@@ -23,6 +23,7 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/duo_space
       DB_USERNAME: duo_user
       DB_PASSWORD: duo_password
+      TMDB_API_READ_ACCESS_TOKEN: ${TMDB_API_READ_ACCESS_TOKEN:-}
     ports:
       - "8080:8080"
     depends_on:

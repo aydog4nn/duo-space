@@ -24,11 +24,11 @@
     </section>
 
     <section class="connection-card" id="connectionCard">
-      <div class="connection-copy"><p class="tiny-label" id="connectionLabel">DUOSPACE'E GİR</p><h2 id="connectionTitle">Kendi köşeni aç</h2><p id="connectionDescription">Listenizi gerçekten birlikte tutmak için giriş yap.</p></div>
+      <div class="connection-copy"><div class="connection-icon">♥</div><p class="tiny-label" id="connectionLabel">DUOSPACE'E GİR</p><h2 id="connectionTitle">Kendi köşeni aç</h2><p id="connectionDescription">Listenizi gerçekten birlikte tutmak için giriş yap.</p></div>
       <form class="auth-form" id="authForm">
-        <input id="displayName" placeholder="Adın" maxlength="80" hidden />
-        <input id="email" type="email" placeholder="E-posta" autocomplete="email" required />
-        <input id="password" type="password" placeholder="Şifre" autocomplete="current-password" minlength="8" required />
+        <label class="auth-field" id="displayNameField" hidden>Adın<input id="displayName" placeholder="Örn. Akın" maxlength="80" /></label>
+        <label class="auth-field">E-posta<input id="email" type="email" placeholder="ornek@mail.com" autocomplete="email" required /></label>
+        <label class="auth-field">Şifre<input id="password" type="password" placeholder="En az 8 karakter" autocomplete="current-password" minlength="8" required /></label>
         <button class="dark-button" type="submit" id="authSubmit">Giriş yap</button>
         <button class="link-button" type="button" id="authModeToggle">Hesabın yok mu? Kayıt ol</button>
       </form>
@@ -55,7 +55,7 @@
       <article class="game-card"><div class="game-icon">🎲</div><div><p class="tiny-label">OYUN MOLASI</p><h3>İki kişilik mini oyunlar</h3><p>Bir tur Uno mu, yoksa biraz rekabet mi?</p></div><button class="dark-button" id="gameButton">Oyun seç</button></article>
     </section>
   </main>
-  <dialog class="movie-dialog" id="movieDialog"><form method="dialog" id="movieForm"><div class="dialog-heading"><div><p class="tiny-label">YENİ SEÇİM</p><h3>Listeye bir şey ekle</h3></div><button class="close-button" value="cancel" aria-label="Kapat">×</button></div><label>Başlık<input id="movieTitle" maxlength="150" placeholder="Örn. About Time" required /></label><label>Bağlantı <span>(isteğe bağlı)</span><input id="movieSourceUrl" type="url" maxlength="500" placeholder="https://..." /></label><button class="dark-button" type="submit">Listeye ekle</button></form></dialog>
+  <dialog class="movie-dialog" id="movieDialog"><form method="dialog" id="movieForm"><div class="dialog-heading"><div><p class="tiny-label">YENİ SEÇİM</p><h3>Listeye bir şey ekle</h3></div><button class="close-button" value="cancel" aria-label="Kapat">×</button></div><label>Film ara<input id="movieSearchQuery" maxlength="100" placeholder="Örn. Before Sunrise" /></label><button class="soft-button" type="button" id="searchMovieButton">TMDB'de ara</button><div class="movie-search-results" id="movieSearchResults"></div><label>Başlık<input id="movieTitle" maxlength="150" placeholder="Örn. About Time" required /></label><label>Bağlantı <span>(isteğe bağlı)</span><input id="movieSourceUrl" type="url" maxlength="500" placeholder="https://..." /></label><button class="dark-button" type="submit">Listeye ekle</button></form></dialog>
   <div class="toast" id="toast" role="status"></div>
   <script src="/assets/app.js"></script>
 </body>
