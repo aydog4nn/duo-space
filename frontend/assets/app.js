@@ -50,7 +50,7 @@ async function initialize() {
 }
 document.getElementById('authModeToggle').addEventListener('click', () => {
   state.authMode = state.authMode === 'login' ? 'register' : 'login'; const registering = state.authMode === 'register';
-  setVisible(document.getElementById('displayName'), registering); document.getElementById('displayName').required = registering; document.getElementById('authSubmit').textContent = registering ? 'Kayıt ol' : 'Giriş yap'; document.getElementById('authModeToggle').textContent = registering ? 'Zaten hesabın var mı? Giriş yap' : 'Hesabın yok mu? Kayıt ol';
+  setVisible(document.getElementById('displayNameField'), registering); document.getElementById('displayName').required = registering; document.getElementById('authSubmit').textContent = registering ? 'Kayıt ol' : 'Giriş yap'; document.getElementById('authModeToggle').textContent = registering ? 'Zaten hesabın var mı? Giriş yap' : 'Hesabın yok mu? Kayıt ol';
 });
 document.getElementById('authForm').addEventListener('submit', async event => {
   event.preventDefault(); const email = document.getElementById('email').value.trim(); const password = document.getElementById('password').value;

@@ -1,51 +1,44 @@
 # DuoSpace
 
-Bu proje, çiftlerin birlikte film izleyebilmesi, izlenecekler listesi hazırlaması ve ileride beraber oyun oynayabilmesi için başladığım bir web projesi.
+DuoSpace, iki kişinin ortak film listesi hazırlayabilmesi için yaptığım Spring Boot projesi. Kullanıcılar kayıt olur, kendi odasını oluşturur veya davet koduyla odaya katılır. Aynı odadaki kişiler ortak listeyi birlikte yönetir.
 
-Şu an backend tarafında kullanıcı kaydı, giriş işlemi, JWT ile korunan endpointler, oda ve watchlist işlemleri var. Frontend üzerinden kayıt/giriş yapılabiliyor; oda oluşturup davet kodu ile eşini odaya alabiliyor ve ortak listeye film ya da oyun ekleyebiliyorsun.
+## Şu an neler var?
 
-## Kullanılan teknolojiler
+- Kayıt olma ve giriş yapma
+- JWT ile korunan endpointler
+- Oda oluşturma, davet kodu ile odaya katılma
+- Ortak izleme listesine ekleme, listeleme, güncelleme ve silme
+- TMDB üzerinden film arama
+- Swagger ile API dokümantasyonu
+- PostgreSQL, Flyway ve Docker Compose kurulumu
 
-- Java 21 ve Spring Boot
-- Spring Data JPA, Spring Security, Validation
+## Teknolojiler
+
+- Java 21, Spring Boot
+- Spring Security, Spring Data JPA, Validation
 - PostgreSQL ve Flyway
+- Springdoc OpenAPI / Swagger
 - Docker Compose
-- HTML, CSS ve JavaScript
+- HTML, CSS, JavaScript
 
-## Klasör yapısı
+## Hızlı başlangıç
 
-```text
-frontend/                 Frontend dosyaları
-src/main/java/
-  config/                 Security ve JWT ayarları
-  controller/             Endpointler
-  dto/                    Request ve response sınıfları
-  entity/                 Veritabanı entity sınıfları
-  exception/              Hata yönetimi
-  repository/             Repository sınıfları
-  service/abs/            Service interface'leri
-  service/impl/           Service implementasyonları
-src/main/resources/
-  db/migration/           Flyway migration dosyaları
-Dockerfile                Uygulama image dosyası
-compose.yaml              API ve PostgreSQL ayarları
+Önce `.env.example` dosyasını kopyalayıp proje kökünde `.env` oluştur:
+
+```env
+TMDB_API_READ_ACCESS_TOKEN=buraya-tmdb-read-token
 ```
 
-## Çalıştırma
+TMDB token olmadan uygulama çalışır; sadece film araması sonuç vermez.
 
-Docker Desktop açıkken proje klasöründe şunu çalıştırmak yeterli:
+Sonra Docker Desktop açıkken:
 
 ```bash
 docker compose up --build -d
 ```
 
-Uygulama: `http://localhost:8080`
-
-Swagger API dokümantasyonu: `http://localhost:8080/swagger-ui/api-docs.html`
-
-Swagger üzerinden korumalı endpointleri denemek için önce `/api/v1/auth/login` ile giriş yap. Dönen `accessToken` değerini sağ üstteki `Authorize` butonuna `Bearer <token>` şeklinde ekle.
-
-Tarayıcıda ilk açılışta kayıt ol veya giriş yap. Ardından oda oluşturup ekranda çıkan davet kodunu diğer kullanıcıyla paylaşabilirsin. Odaya katılan kullanıcı aynı ortak listeyi görür; `+` ile eklenen seçimler veritabanına yazılır.
+- Uygulama: `http://localhost:8080`
+- Swagger: `http://localhost:8080/swagger-ui/api-docs.html`
 
 Kapatmak için:
 
@@ -53,55 +46,54 @@ Kapatmak için:
 docker compose down
 ```
 
-## API tarafı
+## Uygulama akışı
 
-| İşlem | Endpoint |
+1. Ana sayfadan kayıt ol veya giriş yap.
+2. Yeni oda oluştur ya da gelen davet kodunu kullan.
+3. Ortak liste kartındaki `+` butonuna bas.
+4. TMDB'de bir film ara, sonucu seç ve listeye ekle.
+5. Eklenen kayıt PostgreSQL içindeki `watchlist_items` tablosunda tutulur.
+
+## API kısa özeti
+
+| İş | Endpoint |
 | --- | --- |
-| Kullanıcı kaydı | `POST /api/v1/auth/register` |
-| Giriş | `POST /api/v1/auth/login` |
-| Odalar | `POST/GET/PUT/DELETE /api/v1/rooms` |
-| Odaya katılma | `POST /api/v1/rooms/join` |
-| Watchlist | `POST/GET/PUT/DELETE /api/v1/rooms/{roomId}/watchlist` |
+| Kayıt ol | `POST /api/v1/auth/register` |
+| Giriş yap | `POST /api/v1/auth/login` |
+| Oda işlemleri | `/api/v1/rooms` |
+| Odaya katıl | `POST /api/v1/rooms/join` |
+| Ortak liste | `/api/v1/rooms/{roomId}/watchlist` |
+| Film ara | `GET /api/v1/movies/search?query=...` |
 
-Giriş yaptıktan sonra dönen token, korunan endpointlere giderken header'a eklenmeli:
+`/auth/**` dışındaki endpointler JWT ister. Swagger'da önce giriş endpointini çalıştırıp dönen `accessToken` değerini `Authorize` alanına ekleyebilirsin.
+
+## Güvenlik notları
+
+- Kullanıcı şifreleri BCrypt ile saklanır.
+- JWT ile kimlik doğrulama yapılır; oda ve liste işlemlerinde üyelik kontrol edilir.
+- TMDB token sadece backend environment variable'ında bulunur. `.env` dosyası Git'e eklenmez.
+- Film arama endpointi de JWT olmadan çağrılamaz.
+
+## Klasör yapısı
 
 ```text
-Authorization: Bearer <access-token>
+frontend/                 Arayüz dosyaları
+src/main/java/
+  config/                 JWT, Swagger ve dış servis ayarları
+  controller/             HTTP endpointleri
+  dto/                    Request ve response sınıfları
+  entity/                 Veritabanı modelleri
+  repository/             Veritabanı sorguları
+  service/abs/            Service interface'leri
+  service/impl/           Service implementasyonları
+  exception/              Hata cevapları
+src/main/resources/db/migration/  Flyway migration dosyaları
 ```
-
-Oda oluştururken `ownerId`, watchlist eklerken de `addedById` göndermiyoruz. Bunlar token içindeki kullanıcıdan alınıyor. Oda sahibinin odayı düzenleme ve silme yetkisi var; oda üyeleri ise odayı ve ortak listeyi görebiliyor.
-
-Odaya katılmak için `POST /api/v1/rooms/join` endpointine `inviteCode` gönderilir. Bir odaya en fazla iki kullanıcı katılabilir.
-
-## JWT ayarı
-
-Yerelde varsayılan bir anahtar ile çalışıyor. Deploy ederken kendi Base64 JWT anahtarını environment variable olarak vermek gerekiyor:
-
-```bash
-JWT_SECRET=<base64-secret>
-JWT_ACCESS_TOKEN_EXPIRATION=PT15M
-```
-
-## TMDB film araması
-
-Film araması backend üzerinden TMDB'ye gider. TMDB hesabındaki **API Read Access Token** değerini environment variable olarak ver:
-
-```bash
-TMDB_API_READ_ACCESS_TOKEN=<tmdb-read-access-token>
-```
-
-Docker ile çalışırken proje kökünde `.env` dosyası oluşturup aynı değeri oraya koyabilirsin. `.env.example` sadece örnek dosyadır; gerçek anahtarı GitHub'a göndermemelisin.
-
-Anahtar frontend'e gönderilmez. Film arama endpointi `GET /api/v1/movies/search?query=...` şeklindedir ve JWT ister.
 
 ## Sonraki işler
 
-1. Refresh token ve şifre yenileme
-2. Chat için WebSocket
-3. Aynı anda film izleme senkronu
-4. Basit oyun odaları
-5. CI/CD ve deploy
-
-## Branch düzeni
-
-Her işi ayrı bir branch'te yapıp bitince `main` branch'ine alıyorum.
+- Watchlist kartlarında film afişi ve izleme durumu arayüzü
+- Chat için WebSocket
+- Aynı anda izleme senkronu
+- Refresh token ve şifre yenileme
+- CI/CD ve deploy
