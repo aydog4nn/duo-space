@@ -1,54 +1,136 @@
-# DuoSpace
+# DuoSpace — Ortak Film Listesi ve Oda Yönetim Sistemi
 
-Spring Boot ile geliştirilmiş, iki kullanıcının ortak oda üzerinden film listesi yönetmesini sağlayan REST API. Uygulama kullanıcı kimliğini JWT ile doğrular, oda üyeliğini her işlemde kontrol eder ve film arama verisini TMDB API'den backend üzerinden alır.
+Spring Boot ve React ile geliştirilen, iki kullanıcının davet kodu üzerinden aynı odaya bağlanıp ortak film/oyun listesi yönetmesini sağlayan full-stack web uygulaması. Sistem JWT tabanlı kimlik doğrulama, oda üyeliği kontrolü, PostgreSQL kalıcılığı, TMDB film arama entegrasyonu ve Docker ile production paketleme içerir.
 
-## Sistem tasarımı
+---
+
+## Proje Genel Bakış
+
+DuoSpace'te her kullanıcı kayıt olur ve giriş yaptıktan sonra bir oda oluşturabilir veya mevcut bir odaya davet koduyla katılabilir. Bir oda en fazla iki kullanıcı kabul eder. Ortak watchlist üzerinde film veya oyun ekleme, listeleme, izleme durumunu güncelleme ve silme işlemleri yalnızca odaya üye kullanıcılar tarafından yapılabilir.
+
+Film arama isteği tarayıcıdan doğrudan TMDB'ye gitmez. React istemcisi kendi Spring Boot API'sine çağrı yapar; Spring Boot da TMDB API ile iletişim kurar. Böylece TMDB erişim tokenı frontend bundle'ında veya tarayıcıda bulunmaz.
+
+---
+
+## Proje Dosya Mimarisi ve Klasör Yapısı
 
 ```text
-Browser
-  │  static HTML / CSS / JavaScript
-  ▼
-Spring Boot application
-  ├── SecurityFilterChain
-  │     └── JwtAuthenticationFilter
-  ├── Controller
-  ├── Service interface + implementation
-  ├── Spring Data JPA repository
-  ├── Flyway migration
-  └── TMDB client (RestClient)
-          │                     │
-          ▼                     ▼
-      PostgreSQL 17          TMDB API
+.
+├── .mvn/                                  # Maven Wrapper dosyaları
+├── frontend/                              # React 19 + Vite frontend uygulaması
+│   ├── src/
+│   │   ├── api/
+│   │   │   └── client.js                  # Merkezi fetch client ve API hata modeli
+│   │   ├── components/                    # Auth, oda, watchlist ve dialog bileşenleri
+│   │   ├── hooks/
+│   │   │   └── useDuoSpace.js             # Oturum, oda ve watchlist state akışı
+│   │   ├── utils/
+│   │   │   └── storage.js                 # sessionStorage token/oda yönetimi
+│   │   ├── App.jsx                        # Ana ekran bileşimi
+│   │   ├── main.jsx                       # React uygulama giriş noktası
+│   │   └── styles.css                     # Uygulama stilleri
+│   ├── index.html                         # Vite HTML giriş noktası
+│   ├── package.json                       # Frontend bağımlılıkları ve scriptler
+│   └── vite.config.js                     # Vite dev proxy ayarı
+├── src/
+│   ├── main/
+│   │   ├── java/com/aydog4nn/manitimleproje/
+│   │   │   ├── config/                    # Spring Security, JWT, Swagger, TMDB config
+│   │   │   ├── controller/                # REST API controller sınıfları
+│   │   │   ├── dto/                       # Request ve response modelleri
+│   │   │   ├── entity/                    # JPA entity ve enum sınıfları
+│   │   │   ├── exception/                 # Custom exception ve global handler
+│   │   │   ├── repository/                # Spring Data JPA repository arayüzleri
+│   │   │   └── service/
+│   │   │       ├── abs/                   # Service interface'leri
+│   │   │       └── impl/                  # İş kurallarının implementasyonları
+│   │   └── resources/
+│   │       ├── application.properties     # Spring Boot environment ayarları
+│   │       └── db/migration/              # Flyway SQL migration dosyaları
+│   └── test/                              # Unit ve Spring context testleri
+├── .env.example                           # TMDB token örneği
+├── compose.yaml                           # API + PostgreSQL orkestrasyonu
+├── Dockerfile                             # React build + Spring package + JRE runtime
+├── pom.xml                                # Maven bağımlılık ve build tanımları
+└── README.md                              # Ana teknik proje dokümanı
 ```
 
-Uygulama katmanları:
+---
+
+## Sistem Mimarisi
+
+```mermaid
+flowchart TD
+    A[React / Vite Client] -->|Bearer JWT| B[Spring Security Filter Chain]
+    B --> C[JwtAuthenticationFilter]
+    C --> D[Controller Layer]
+    D --> E[Service Layer]
+    E --> F[Repository Layer]
+    F --> G[(PostgreSQL)]
+    E --> H[TMDB Movie API]
+```
+
+### Katman Sorumlulukları
 
 | Katman | Sorumluluk |
-| --- | --- |
-| `controller` | HTTP endpoint, request validation, response status |
-| `service/abs` | İş kurallarının sözleşmesi |
-| `service/impl` | Oda üyeliği, sahiplik ve CRUD kuralları |
-| `repository` | JPA üzerinden kalıcı veri erişimi |
-| `entity` | PostgreSQL tablolarının domain modeli |
-| `dto` | API request/response modelleri |
-| `config` | JWT, Spring Security, OpenAPI ve TMDB ayarları |
-| `exception` | Merkezi hata cevabı üretimi |
+| :--- | :--- |
+| React Components | Ekran parçaları, form state'i ve kullanıcı etkileşimi |
+| `useDuoSpace` Hook | Oturum, aktif oda, watchlist ve API sonrası state yenileme |
+| `api/client.js` | Tek noktadan HTTP çağrısı, Authorization header ve API hata dönüşümü |
+| Controller | HTTP endpoint, request validation ve response status yönetimi |
+| Service | Oda kapasitesi, üyelik, sahiplik ve watchlist iş kuralları |
+| Repository | PostgreSQL üzerinde JPA tabanlı veri erişimi |
+| Flyway | Veritabanı şemasının versiyonlu migration yönetimi |
 
-## Teknoloji seti
+---
 
-| Alan | Kullanım |
-| --- | --- |
-| Runtime | Java 21, Spring Boot 4 |
-| Web | Spring Web MVC, Bean Validation |
-| Persistence | Spring Data JPA, PostgreSQL 17 |
-| Schema management | Flyway (`ddl-auto=validate`) |
-| Security | Spring Security, BCrypt, JJWT |
-| External API | Spring `RestClient`, TMDB API |
-| API documentation | Springdoc OpenAPI / Swagger UI |
-| Container | Docker, Docker Compose |
-| Client | Vanilla HTML, CSS, JavaScript |
+## Kimlik Doğrulama ve Oda Bazlı Yetkilendirme
 
-## Veri modeli
+Sistemde global rol hiyerarşisi yerine oda sahipliği ve oda üyeliği modeli kullanılır. Kullanıcıların kimliği JWT token içindeki kullanıcı UUID'sinden çözülür; `ownerId` veya `addedById` gibi güvenlik açısından kritik alanlar frontend tarafından gönderilmez.
+
+```mermaid
+sequenceDiagram
+    participant C as React Client
+    participant S as Spring Security
+    participant A as API Controller
+    participant B as Service
+    participant D as PostgreSQL
+
+    C->>S: Authorization: Bearer JWT
+    S->>S: Token imzası ve süre doğrulama
+    S->>A: SecurityContext içine userId eklenir
+    A->>B: currentUserId + request
+    B->>D: Oda üyeliği / sahiplik doğrulaması
+    D-->>B: Yetki sonucu
+    B-->>A: Güvenli response
+    A-->>C: JSON response
+```
+
+### Güvenlik Kuralları
+
+- Şifreler veritabanında BCrypt hash olarak saklanır.
+- API stateless'tir; form login, HTTP Basic ve server-side session kullanılmaz.
+- `JwtAuthenticationFilter`, geçerli token içinden kullanıcı UUID'sini çözerek `SecurityContext`e yazar.
+- `/api/v1/auth/**`, frontend static dosyaları ve Swagger hariç tüm endpointler JWT ister.
+- Oda bilgisi ve watchlist işlemlerinde kullanıcının odaya üye olduğu doğrulanır.
+- Oda güncelleme ve silme işlemlerini sadece oda sahibi yapabilir.
+- React access tokenı `localStorage` yerine `sessionStorage`da tutar; tarayıcı sekmesi kapanınca silinir.
+- TMDB tokenı backend environment variable'ı olarak tutulur; istemciye gönderilmez.
+- CSP, `Referrer-Policy` ve frame embedding engeli HTTP security header'larıyla uygulanır.
+
+### Route Güvenlik Matrisi
+
+| Route | Erişim |
+| :--- | :--- |
+| `/`, `/assets/**` | Public |
+| `/api/v1/auth/register`, `/api/v1/auth/login` | Public |
+| `/swagger-ui/**`, `/v3/api-docs/**` | Public |
+| `/api/v1/rooms/**` | Bearer JWT + oda üyeliği/sahipliği kontrolü |
+| `/api/v1/movies/search` | Bearer JWT |
+
+---
+
+## Veri Modeli ve İş Kuralları
 
 ```text
 users
@@ -59,8 +141,9 @@ users
 
 rooms
  ├── id (UUID, PK)
- ├── owner_id -> users.id
- └── invite_code (UNIQUE)
+ ├── name
+ ├── invite_code (UNIQUE)
+ └── owner_id -> users.id
 
 room_members
  ├── room_id -> rooms.id
@@ -75,46 +158,27 @@ watchlist_items
  └── status: PLANNED | WATCHING | COMPLETED
 ```
 
-`room_members` üzerinde `(room_id, user_id)` unique constraint'i bulunur. Bir oda en fazla iki üyeye izin verir; bu limit service katmanında kontrol edilir. Oda silindiğinde üyelik ve watchlist kayıtları foreign key `ON DELETE CASCADE` ile silinir.
+- `users.username` ve `users.email` benzersizdir.
+- `rooms.invite_code` benzersizdir ve ikinci kullanıcının odaya katılması için kullanılır.
+- `room_members` tablosunda `(room_id, user_id)` unique constraint'i aynı kullanıcının odaya iki kez eklenmesini engeller.
+- Bir odanın iki kullanıcı sınırı service katmanında kontrol edilir.
+- Oda silindiğinde room member ve watchlist kayıtları `ON DELETE CASCADE` ile temizlenir.
+- Hibernate şema üretmez; `spring.jpa.hibernate.ddl-auto=validate` ile Flyway tarafından oluşturulan şemayı doğrular.
 
-Şema, `V1__create_users_table.sql` ve `V2__create_rooms_members_and_watchlist.sql` Flyway migration'larıyla oluşturulur. Hibernate şema üretmez, mevcut şemayı doğrular.
+---
 
-## Kimlik doğrulama ve erişim kontrolü
+## API Uç Noktaları
 
-1. Kullanıcı `register` veya `login` endpointini çağırır.
-2. Parola BCrypt hash'i ile karşılaştırılır.
-3. Başarılı girişte kullanıcı UUID'sini içeren, varsayılan olarak 15 dakika geçerli access token üretilir.
-4. İstemci, korumalı isteklere `Authorization: Bearer <access-token>` header'ı ekler.
-5. `JwtAuthenticationFilter` tokenı doğrular ve kullanıcı UUID'sini `SecurityContext` içine koyar.
-6. Controller, kullanıcı bilgisini request body'den değil `Authentication` nesnesinden alır.
+### 1. Authentication API
 
-Security policy:
+Ana dizin: `/api/v1/auth`
 
-| Route | Erişim |
-| --- | --- |
-| `/`, `/assets/**` | Public |
-| `/api/v1/auth/**` | Public |
-| `/swagger-ui/**`, `/v3/api-docs/**` | Public |
-| Diğer tüm API endpointleri | Bearer JWT zorunlu |
+| Uç Nokta | Metot | Açıklama | Yetki |
+| :--- | :--- | :--- | :--- |
+| `/register` | POST | Kullanıcı oluşturur, parolayı BCrypt ile saklar | Public |
+| `/login` | POST | Kullanıcı girişini doğrular ve access token döner | Public |
 
-Uygulama stateless'tir: form login, HTTP Basic ve server-side HTTP session kapalıdır. Geçersiz veya süresi dolmuş token `401 Unauthorized` döner. Odaya ait kaynaklarda üyelik; oda güncelleme ve silme işlemlerinde ayrıca sahiplik kontrol edilir.
-
-## API sözleşmesi
-
-Tüm korumalı endpointler aşağıdaki header'ı ister:
-
-```http
-Authorization: Bearer <access-token>
-```
-
-### Authentication
-
-| Method | Path | Authentication | Request |
-| --- | --- | --- | --- |
-| `POST` | `/api/v1/auth/register` | Yok | `username`, `email`, `password` |
-| `POST` | `/api/v1/auth/login` | Yok | `email`, `password` |
-
-Kayıt kuralları: kullanıcı adı 3-50, e-posta en fazla 255, parola 8-72 karakterdir. Kullanıcı adı veya e-posta tekrar ederse `409 Conflict` döner.
+Kayıt payload kuralları: `username` 3-50, `email` en fazla 255, `password` 8-72 karakterdir.
 
 ```json
 POST /api/v1/auth/login
@@ -124,18 +188,18 @@ POST /api/v1/auth/login
 }
 ```
 
-Başarılı login response'u access token içerir. Bu token Swagger UI'daki `Authorize` alanına girilerek korumalı endpointler denenebilir.
+### 2. Room API
 
-### Room API
+Ana dizin: `/api/v1/rooms`
 
-| Method | Path | Kural |
-| --- | --- | --- |
-| `POST` | `/api/v1/rooms` | Token sahibi kullanıcı oda sahibi olur |
-| `POST` | `/api/v1/rooms/join` | Davet kodu geçerli olmalı, oda iki kişiye ulaşmamış olmalı |
-| `GET` | `/api/v1/rooms` | Token sahibinin üye olduğu odaları listeler |
-| `GET` | `/api/v1/rooms/{roomId}` | Yalnızca oda üyesi okuyabilir |
-| `PUT` | `/api/v1/rooms/{roomId}` | Yalnızca oda sahibi günceller |
-| `DELETE` | `/api/v1/rooms/{roomId}` | Yalnızca oda sahibi silebilir |
+| Uç Nokta | Metot | Açıklama | Oda Kuralı |
+| :--- | :--- | :--- | :--- |
+| `/` | POST | Yeni oda oluşturur | Token sahibi otomatik owner olur |
+| `/join` | POST | Davet koduyla odaya katılır | Oda dolu olmamalı, tekrar üyelik olmamalı |
+| `/` | GET | Aktif kullanıcının odalarını listeler | Sadece üye olunan odalar döner |
+| `/{roomId}` | GET | Oda bilgisi getirir | Sadece oda üyesi okuyabilir |
+| `/{roomId}` | PUT | Oda adını günceller | Sadece owner günceller |
+| `/{roomId}` | DELETE | Odayı siler | Sadece owner silebilir |
 
 ```json
 POST /api/v1/rooms
@@ -144,16 +208,16 @@ POST /api/v1/rooms
 }
 ```
 
-Oda adı boş olamaz ve en fazla 100 karakterdir. İstemci `ownerId` göndermez; owner token içinden belirlenir.
+### 3. Watchlist API
 
-### Watchlist API
+Ana dizin: `/api/v1/rooms/{roomId}/watchlist`
 
-| Method | Path | Kural |
-| --- | --- | --- |
-| `POST` | `/api/v1/rooms/{roomId}/watchlist` | Yalnızca oda üyesi ekleyebilir |
-| `GET` | `/api/v1/rooms/{roomId}/watchlist` | Yalnızca oda üyesi listeleyebilir |
-| `PUT` | `/api/v1/rooms/{roomId}/watchlist/{itemId}` | Yalnızca oda üyesi güncelleyebilir |
-| `DELETE` | `/api/v1/rooms/{roomId}/watchlist/{itemId}` | Yalnızca oda üyesi silebilir |
+| Uç Nokta | Metot | Açıklama | Oda Kuralı |
+| :--- | :--- | :--- | :--- |
+| `/` | POST | Listeye seçim ekler | Sadece oda üyesi |
+| `/` | GET | Ortak listeyi getirir | Sadece oda üyesi |
+| `/{itemId}` | PUT | Başlık, link veya durumu günceller | Sadece oda üyesi |
+| `/{itemId}` | DELETE | Seçimi siler | Sadece oda üyesi |
 
 ```json
 POST /api/v1/rooms/{roomId}/watchlist
@@ -163,21 +227,21 @@ POST /api/v1/rooms/{roomId}/watchlist
 }
 ```
 
-Kaydı ekleyen kullanıcı token'dan alınır. `PUT` isteğinde başlık, kaynak URL'si ve `PLANNED`, `WATCHING` veya `COMPLETED` durumlarından biri gönderilir.
+### 4. Movie Catalog API
 
-### Movie catalog API
+Ana dizin: `/api/v1/movies`
 
-| Method | Path | Kural |
-| --- | --- | --- |
-| `GET` | `/api/v1/movies/search?query=arrival` | JWT gerekli, sorgu 2-100 karakter |
+| Uç Nokta | Metot | Açıklama | Yetki |
+| :--- | :--- | :--- | :--- |
+| `/search?query={query}` | GET | TMDB üzerinden en fazla 10 film sonucu döner | Bearer JWT |
 
-Endpoint backend üzerinden TMDB `/search/movie` endpointine gider, sonucu en fazla 10 kayıtla sınırlar ve şu alanları döner: `tmdbId`, `title`, `releaseYear`, `posterUrl`, `overview`, `voteAverage`.
+`query` parametresi 2-100 karakter olmalıdır. Response içindeki `tmdbId`, `title`, `releaseYear`, `posterUrl`, `overview` ve `voteAverage` alanları React film seçim ekranında kullanılır.
 
-TMDB tokenı frontend'e verilmez. Token yoksa veya dış servis ulaşılamazsa API `503 Service Unavailable` döner.
+---
 
-## Hata cevabı standardı
+## Hata Response Standardı
 
-`GlobalExceptionHandler` domain exception'larını tek alanlı JSON response'a dönüştürür:
+`GlobalExceptionHandler`, domain hatalarını aşağıdaki ortak JSON formatında döner:
 
 ```json
 {
@@ -185,48 +249,76 @@ TMDB tokenı frontend'e verilmez. Token yoksa veya dış servis ulaşılamazsa A
 }
 ```
 
-| HTTP status | Örnek durum |
-| --- | --- |
-| `400` | Bean Validation başarısız |
-| `401` | Hatalı kullanıcı bilgisi veya geçersiz JWT |
-| `403` | Oda sahibi olmayan kullanıcının sahiplik işlemi yapması |
+| HTTP Kodu | Kullanım |
+| :--- | :--- |
+| `400` | Validation hatası |
+| `401` | Hatalı kullanıcı bilgisi, geçersiz veya süresi dolmuş JWT |
+| `403` | Sahiplik yetkisi olmayan işlem |
 | `404` | Oda veya watchlist kaydı bulunamadı |
-| `409` | Tekrarlanan kullanıcı veya dolu/uygunsuz oda katılımı |
-| `503` | TMDB erişimi başarısız |
+| `409` | Duplicate kullanıcı, tekrar üyelik veya dolu oda |
+| `503` | TMDB dış servisine ulaşılamadı |
 
-## Local environment ve Docker
+---
 
-### Gerekli environment variable'lar
+## React Frontend Mimarisi
 
-| Variable | Kullanım |
-| --- | --- |
+Frontend React 19 ve Vite 7 ile yazılmıştır. Tek bir JavaScript dosyası yerine sorumluluklar ayrılmıştır:
+
+| Dosya / Katman | Sorumluluk |
+| :--- | :--- |
+| `App.jsx` | Uygulama ekran akışı ve kullanıcı aksiyonlarını birleştirir |
+| `components/AuthCard.jsx` | Login/register form state'i |
+| `components/RoomSetup.jsx` | Oda oluşturma ve davet koduyla katılma |
+| `components/Watchlist.jsx` | Watchlist görünümü, durum geçişi ve silme |
+| `components/AddItemDialog.jsx` | TMDB arama ve manuel seçim ekleme |
+| `hooks/useDuoSpace.js` | API çağrıları sonrası token, room ve item state'ini yeniler |
+| `api/client.js` | JSON parse, Authorization header ve `ApiError` üretimi |
+
+Vite development modunda `/api` isteklerini `localhost:8080` adresindeki Spring Boot uygulamasına proxy eder. Production ortamında React build çıktısı Spring Boot jar'ı içindeki static dosyalara kopyalanır; ayrı bir Node runtime gerekmez.
+
+---
+
+## Docker Paketleme ve Çalıştırma
+
+`Dockerfile` üç aşamalı build kullanır:
+
+1. `node:22-alpine`: React/Vite frontend build çıktısını üretir.
+2. `eclipse-temurin:21-jdk`: Spring Boot jar'ını ve React static çıktısını paketler.
+3. `eclipse-temurin:21-jre`: Sadece jar dosyasını non-root `spring` kullanıcısıyla çalıştırır.
+
+Runtime image'a Node, Maven cache'i, frontend source dosyaları ve build araçları taşınmaz.
+
+### Environment Variable'lar
+
+| Variable | Açıklama |
+| :--- | :--- |
 | `DB_URL` | PostgreSQL JDBC URL |
 | `DB_USERNAME` | PostgreSQL kullanıcı adı |
 | `DB_PASSWORD` | PostgreSQL parolası |
 | `JWT_SECRET` | Production access token signing secret'i |
-| `JWT_ACCESS_TOKEN_EXPIRATION` | ISO-8601 duration, ör. `PT15M` |
-| `TMDB_API_READ_ACCESS_TOKEN` | TMDB backend erişim tokenı |
+| `JWT_ACCESS_TOKEN_EXPIRATION` | ISO-8601 süre, ör. `PT15M` |
+| `TMDB_API_READ_ACCESS_TOKEN` | TMDB backend access tokenı |
 
-Local Docker kurulumu için `.env.example` dosyasını `.env` olarak kopyala ve TMDB tokenını ekle:
+### Docker Compose ile Çalıştırma
+
+Önce `.env.example` dosyasını `.env` olarak kopyala ve TMDB tokenını ekle:
 
 ```bash
 cp .env.example .env
 docker compose up --build -d
 ```
 
-| URL | Açıklama |
-| --- | --- |
-| `http://localhost:8080` | Static frontend ve REST API |
-| `http://localhost:8080/swagger-ui/api-docs.html` | OpenAPI / Swagger UI |
-| `localhost:5432` | PostgreSQL portu |
-
-`compose.yaml`, API container'ını PostgreSQL healthcheck tamamlanmadan başlatmaz. TMDB tokenı `.env` üzerinden API container'ına aktarılır. `.env` `.gitignore` içinde olduğu için repository'ye eklenmez.
-
-Container'ları kapatmak için:
+| Adres | Açıklama |
+| :--- | :--- |
+| `http://localhost:8080` | React frontend ve Spring Boot API |
+| `http://localhost:8080/swagger-ui/api-docs.html` | Swagger UI |
+| `localhost:5432` | PostgreSQL |
 
 ```bash
 docker compose down
 ```
+
+---
 
 ## Testler
 
@@ -234,11 +326,21 @@ docker compose down
 ./mvnw test
 ```
 
-| Test sınıfı | Doğrulanan davranış |
-| --- | --- |
-| `JwtServiceTest` | Üretilen access token içinden doğru kullanıcı UUID'sinin çıkarılması |
-| `RoomServiceImplTest` | Geçerli davet kodu, tekrar katılım engeli, iki kişi oda limiti |
-| `TmdbMovieCatalogServiceTest` | TMDB JSON alanlarının API DTO'suna eşlenmesi; yıl ve poster URL'si üretimi |
-| `ManitimleProjeApplicationTests` | Spring context, Flyway ve PostgreSQL bağlantısının açılması |
+| Test Sınıfı | Doğrulanan Davranış |
+| :--- | :--- |
+| `JwtServiceTest` | Üretilen token içinden doğru kullanıcı UUID'sinin çıkarılması |
+| `RoomServiceImplTest` | Geçerli davet kodu, tekrar katılım engeli ve iki kişi oda limiti |
+| `TmdbMovieCatalogServiceTest` | TMDB JSON alanlarının response DTO'suna dönüştürülmesi |
+| `ManitimleProjeApplicationTests` | Spring context, Flyway migration ve PostgreSQL bağlantısı |
 
-TMDB servis testi gerçek TMDB ağına bağlı değildir. Test içinde lokal HTTP server ayağa kaldırılır; böylece JSON mapping testi ağ/DNS probleminden bağımsız çalışır.
+TMDB servis testi gerçek TMDB ağına ihtiyaç duymaz. Test içinde lokal HTTP server çalışır; bu sayede JSON mapping davranışı dış ağ veya DNS probleminden bağımsız doğrulanır.
+
+---
+
+## API Dokümantasyonu
+
+Uygulama çalıştıktan sonra tüm endpointleri ve request/response şemalarını Swagger UI üzerinden inceleyebilirsin:
+
+- `http://localhost:8080/swagger-ui/api-docs.html`
+
+Korumalı endpointleri Swagger üzerinde denemek için önce `/api/v1/auth/login` endpointinden access token alıp **Authorize** alanına `Bearer <access-token>` formatında eklemek gerekir.

@@ -1,62 +1,13 @@
 <!doctype html>
 <html lang="tr">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DuoSpace — bizim küçük evrenimiz</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/assets/styles.css" />
-  <link rel="stylesheet" href="/assets/api.css" />
-</head>
-<body>
-  <div class="orb orb-one"></div><div class="orb orb-two"></div>
-  <main class="shell">
-    <nav class="topbar">
-      <a class="brand" href="#"><span class="brand-mark">♥</span><span>Duo<span>Space</span></span></a>
-      <div class="nav-actions"><span class="live-dot"></span><span class="online">İkiniz de buradasınız</span><button class="avatar">A</button></div>
-    </nav>
-
-    <section class="welcome-row">
-      <div><p class="eyebrow">15 Ağustos, Cuma · Date night</p><h1>Bu akşam <em>bizim.</em></h1><p class="subtle">Bir film seç, ışıkları kıs ve aynı anda başlat.</p></div>
-      <button class="soft-button" id="planButton">+ Yeni akşam planla</button>
-    </section>
-
-    <section class="connection-card" id="connectionCard">
-      <div class="connection-copy"><div class="connection-icon">♥</div><p class="tiny-label" id="connectionLabel">DUOSPACE'E GİR</p><h2 id="connectionTitle">Kendi köşeni aç</h2><p id="connectionDescription">Listenizi gerçekten birlikte tutmak için giriş yap.</p></div>
-      <form class="auth-form" id="authForm">
-        <label class="auth-field" id="displayNameField" hidden>Adın<input id="displayName" placeholder="Örn. Akın" maxlength="80" /></label>
-        <label class="auth-field">E-posta<input id="email" type="email" placeholder="ornek@mail.com" autocomplete="email" required /></label>
-        <label class="auth-field">Şifre<input id="password" type="password" placeholder="En az 8 karakter" autocomplete="current-password" minlength="8" required /></label>
-        <button class="dark-button" type="submit" id="authSubmit">Giriş yap</button>
-        <button class="link-button" type="button" id="authModeToggle">Hesabın yok mu? Kayıt ol</button>
-      </form>
-      <div class="room-form" id="roomForm" hidden>
-        <form id="createRoomForm"><input id="roomName" placeholder="Odanızın adı" maxlength="100" required /><button class="soft-button" type="submit">Oda oluştur</button></form>
-        <p>veya</p>
-        <form id="joinRoomForm"><input id="inviteCode" placeholder="Davet kodu" maxlength="16" required /><button class="soft-button" type="submit">Odaya katıl</button></form>
-      </div>
-      <div class="room-connected" id="roomConnected" hidden><p class="tiny-label">AKTİF ODA</p><strong id="activeRoomName"></strong><span id="activeInviteCode"></span><button class="link-button" type="button" id="logoutButton">Çıkış yap</button></div>
-    </section>
-
-    <section class="dashboard">
-      <article class="watch-card">
-        <div class="movie-art"><div class="film-grain"></div><div class="art-copy"><span>TONIGHT'S PICK</span><h2>Before<br />Sunrise</h2><p>1995 · Romance · 1h 41m</p></div><button class="play-button" id="playButton" aria-label="Filmi başlat">▶</button></div>
-        <div class="watch-footer"><div><p class="tiny-label">BİRLİKTE İZLE</p><strong id="watchStatus">Henüz başlamadınız</strong></div><div class="progress-wrap"><div class="progress-track"><span id="progressBar"></span></div><small id="timeText">00:00 / 1:41:00</small></div><button class="round-button" id="likeButton" aria-label="Beğen">♡</button></div>
-      </article>
-
-      <aside class="date-card"><div class="sparkle">✦</div><p class="tiny-label">BU AKŞAMIN NOTU</p><h3>"Birlikte geçen zaman, en güzel yer."</h3><div class="date-line"><span>🍓</span><p>Atıştırmalıklar hazır mı?<br /><b>Çilek & sıcak çikolata</b></p></div><button class="text-button" id="noteButton">Notu düzenle →</button></aside>
-
-      <article class="queue-card"><div class="card-heading"><div><p class="tiny-label">BİRLİKTE LİSTE</p><h3>Sıradaki keyifler</h3></div><button class="icon-button" id="addMovie" aria-label="Listeye ekle">+</button></div><ul id="movieList"><li class="empty-list">Listeyi görmek için giriş yap.</li></ul></article>
-
-      <article class="chat-card"><div class="card-heading"><div><p class="tiny-label">KÜÇÜK MESAJLAR</p><h3>Bizim köşemiz</h3></div><span class="heart-badge">♥</span></div><div class="messages" id="messages"><p class="message them">Filmi sen seç, ben patlamış mısırı hallederim 🥹<small>20:12</small></p><p class="message me">Anlaştık. Ama oyunda kaybeden tatlı ısmarlar!<small>20:13</small></p></div><form class="message-form" id="messageForm"><input id="messageInput" placeholder="Tatlı bir şey yaz..." maxlength="120" /><button aria-label="Gönder">↑</button></form></article>
-
-      <article class="game-card"><div class="game-icon">🎲</div><div><p class="tiny-label">OYUN MOLASI</p><h3>İki kişilik mini oyunlar</h3><p>Bir tur Uno mu, yoksa biraz rekabet mi?</p></div><button class="dark-button" id="gameButton">Oyun seç</button></article>
-    </section>
-  </main>
-  <dialog class="movie-dialog" id="movieDialog"><form method="dialog" id="movieForm"><div class="dialog-heading"><div><p class="tiny-label">YENİ SEÇİM</p><h3>Listeye bir şey ekle</h3></div><button class="close-button" value="cancel" aria-label="Kapat">×</button></div><label>Film ara<input id="movieSearchQuery" maxlength="100" placeholder="Örn. Before Sunrise" /></label><button class="soft-button" type="button" id="searchMovieButton">TMDB'de ara</button><div class="movie-search-results" id="movieSearchResults"></div><label>Başlık<input id="movieTitle" maxlength="150" placeholder="Örn. About Time" required /></label><label>Bağlantı <span>(isteğe bağlı)</span><input id="movieSourceUrl" type="url" maxlength="500" placeholder="https://..." /></label><button class="dark-button" type="submit">Listeye ekle</button></form></dialog>
-  <div class="toast" id="toast" role="status"></div>
-  <script src="/assets/app.js"></script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#25182f" />
+    <title>DuoSpace</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
 </html>
