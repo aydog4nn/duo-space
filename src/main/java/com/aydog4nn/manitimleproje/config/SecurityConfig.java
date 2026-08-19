@@ -24,6 +24,19 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .headers(headers -> headers
+                        .contentSecurityPolicy(contentSecurityPolicy -> contentSecurityPolicy.policyDirectives(
+                                "default-src 'self'; " +
+                                "script-src 'self'; " +
+                                "style-src 'self' https://fonts.googleapis.com; " +
+                                "font-src 'self' https://fonts.gstatic.com; " +
+                                "img-src 'self' data: https://image.tmdb.org; " +
+                                "connect-src 'self'; " +
+                                "base-uri 'self'; form-action 'self'; frame-ancestors 'none'"
+                        ))
+                        .referrerPolicy(referrerPolicy -> referrerPolicy.policy(
+                                org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN
+                        )))
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 .authorizeHttpRequests(authorize -> authorize
