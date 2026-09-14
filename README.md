@@ -329,6 +329,7 @@ docker compose down
 | Test Sınıfı | Doğrulanan Davranış |
 | :--- | :--- |
 | `JwtServiceTest` | Üretilen token içinden doğru kullanıcı UUID'sinin çıkarılması |
+| `JwtAuthenticationFilterTest` | Geçerli, bozuk ve süresi dolmuş token; eksik header; sonraki bileşenlerin hatalarının token hatası olarak yakalanmaması |
 | `RoomServiceImplTest` | Geçerli davet kodu, tekrar katılım engeli ve iki kişi oda limiti |
 | `TmdbMovieCatalogServiceTest` | TMDB JSON alanlarının response DTO'suna dönüştürülmesi |
 | `ManitimleProjeApplicationTests` | Spring context, Flyway migration ve PostgreSQL bağlantısı |
