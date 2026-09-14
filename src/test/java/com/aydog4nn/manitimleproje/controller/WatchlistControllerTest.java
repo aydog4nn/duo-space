@@ -107,6 +107,25 @@ class WatchlistControllerTest {
                 .andExpect(status().is(expectedStatus));
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"POST", "PUT"})
+    void shouldRejectNonWebLinksBeforeCallingTheService(String method) throws Exception {
+        String path = "/api/v1/rooms/" + roomId + "/watchlist";
+        if (method.equals("PUT")) {
+            path += "/" + itemId;
+        }
+        mvc.perform(request(HttpMethod.valueOf(method), path)
+                        .principal(new UsernamePasswordAuthenticationToken(userId.toString(), null, List.of()))
+                        .contentType("application/json")
+                        .content("""
+                                {"title":"Film","sourceUrl":"javascript:alert(1)","status":"PLANNED"}
+                                """))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(items, members);
+        assertItemUnchanged();
+    }
+
     private void assertItemUnchanged() {
         assertEquals("Eski başlık", item.getTitle());
         assertEquals(WatchlistStatus.PLANNED, item.getStatus());

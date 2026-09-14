@@ -221,6 +221,8 @@ Ana dizin: `/api/v1/rooms/{roomId}/watchlist`
 
 Güncelleme ve silmede önce URL'deki `roomId` için üyelik doğrulanır (üye değilse `403`). Ardından kaydın bu odaya ait olması gerekir; kayıt yoksa veya başka odadaysa `404` döner. Kullanıcı iki odaya da üye olsa bile farklı odanın kaydı bu URL üzerinden değiştirilemez.
 
+`sourceUrl` isteğe bağlıdır (`null` veya boş metin). Doluysa en fazla 2048 karakterlik, host içeren bir `http`/`https` adresi olmalıdır. Adres içine yazılmış kullanıcı adı/parola, geçersiz port ve diğer protokoller reddedilir (`400`). Kontrol DNS sorgusu veya dış HTTP isteği yapmaz; bağlantının güvenilirliğini ya da erişilebilirliğini doğrulamaz. Önceden kaydedilmiş adresler otomatik temizlenmez; geçersiz eski bağlantı içeren bir kayıt güncellenirken bağlantı düzeltilmeli veya kaldırılmalıdır.
+
 ```json
 POST /api/v1/rooms/{roomId}/watchlist
 {
@@ -333,6 +335,7 @@ docker compose down
 | `JwtServiceTest` | Üretilen token içinden doğru kullanıcı UUID'sinin çıkarılması |
 | `JwtAuthenticationFilterTest` | Geçerli, bozuk ve süresi dolmuş token; eksik header; sonraki bileşenlerin hatalarının token hatası olarak yakalanmaması |
 | `WatchlistControllerTest` | PUT/DELETE için oda–kayıt eşleşmesi, yetkili üye, üye olmayan kullanıcı ve bulunamayan kayıt; controller ve gerçek servis, mock repository ile test edilir |
+| `WatchlistRequestValidationTest` | Ekleme ve güncelleme DTO'larında isteğe bağlı web bağlantısı doğrulaması; geçerli adresler ve reddedilen protokol/biçimler |
 | `RoomServiceImplTest` | Geçerli davet kodu, tekrar katılım engeli ve iki kişi oda limiti |
 | `TmdbMovieCatalogServiceTest` | TMDB JSON alanlarının response DTO'suna dönüştürülmesi |
 | `ManitimleProjeApplicationTests` | Spring context, Flyway migration ve PostgreSQL bağlantısı |

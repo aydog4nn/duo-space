@@ -46,3 +46,20 @@ Yeni davranış: Controller `roomId` bilgisini servise aktarıyor. Servis önce 
 Komut: `mvn -Dtest=WatchlistControllerTest,JwtAuthenticationFilterTest,JwtServiceTest,RoomServiceImplTest test`.
 
 Mockito dinamik agent uyarısı verdi; testler başarısız olmadı. Uyarıyı susturmak için ayar değiştirilmedi. Bu adım yerel kod ve test değişikliğidir; push, merge veya deploy yapılmadı.
+
+## 3. Film bağlantısının doğrulanması — 14 Eylül 2026
+
+Önceki davranış: `sourceUrl` için yalnızca uzunluk kontrolü vardı. Yeni davranış: `@WebLink` ekleme ve güncelleme DTO'larında aynı doğrulamayı kullanıyor. Alan isteğe bağlı; dolu adresin protokolü HTTP/HTTPS olmalı, host içermeli, kullanıcı bilgisi içermemeli ve portu geçerli aralıkta olmalı. URI ayrıştırması ağ isteği yapmadan çalışıyor. Yeni bağımlılık veya migration eklenmedi.
+
+| Kural / senaryo | Sonuç | Kanıt | Kalan işlem / sorumlu |
+| --- | --- | --- | --- |
+| TEST-03: Hatanın tekrarı | GEÇTİ | Düzeltmeden önce 19 doğrulama testinin 14'ü başarısız oldu; reddedilmesi beklenen adresler kabul ediliyordu | Yok |
+| SEC-05, CODE-05: Giriş sınırı | GEÇTİ | DTO doğrulamasında 19 senaryo; POST/PUT için geçersiz protokol 400 döndü, repository çağrılmadı | Yok |
+| Regresyon | GEÇTİ | İlgili 39 test geçti; veritabanı ve dış ağ kullanılmadı | Tam entegrasyon testleri ayrı |
+| API-05: Sunucu tarafı URL erişimi | N/A | Bu alan yalnızca kaydediliyor, sunucu bağlantıyı açmıyor | İleride URL fetch eklenirse SSRF savunması ayrıca gerekli |
+| SEC-13: Eski kayıtların frontend'de gösterimi | DOĞRULANAMADI | Frontend değiştirilmedi; eski veriler taranmadı veya silinmedi | Sonraki adımda link gösteriminde protokol kontrolü |
+| TEST-15: Bağımsız inceleme | DOĞRULANAMADI | İnsan incelemesi yapılmadı | Birleştirmeden önce geliştirici incelemesi |
+
+Komut: `mvn -Dtest=WatchlistRequestValidationTest,WatchlistControllerTest,JwtAuthenticationFilterTest,JwtServiceTest,RoomServiceImplTest test` (yerel Maven 3.9.16).
+
+Bu kontrol zararlı siteleri tespit eden bir itibar filtresi değildir. Geçersiz eski adres içeren kayıtlar güncellenirken adresin düzeltilmesi veya kaldırılması gerekir. Üretim yayını, push ve merge yapılmadı.
