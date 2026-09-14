@@ -76,3 +76,18 @@ Bu kontrol zararlı siteleri tespit eden bir itibar filtresi değildir. Geçersi
 | Gerçek kullanıcı akışı | DOĞRULANAMADI | İzole test ekranı API ve gerçek oturum kullanmıyor | Uçtan uca test ayrı adım |
 
 Ortamda npm bulunmadığından mevcut pnpm ile bağımlılıklar kuruldu; lockfile/paket sürümü değişikliği yapılmadı. pnpm esbuild kurulum scriptini engelledi; bu koruma gevşetilmeden mevcut binary ile Vite build başarılı oldu. Kurulumun ürettiği geçici pnpm yapılandırması kaldırıldı. Kontrol yalnızca yerel; push/merge/deploy yapılmadı.
+
+## 5. Gerçek oturumla liste yetkileri — 14 Eylül 2026
+
+`WatchlistAuthorizationIT`, rastgele portta gerçek Spring sunucusu, güvenlik filtre zinciri ve PostgreSQL 17.11 ile çalıştırıldı. Kayıt/giriş endpointlerinden alınan tokenlar kullanıldı. Uygulama veritabanına dokunulmadı; ayrı geçici konteynerde sentetik hesaplar ve odalar oluşturuldu. Önceki adımlarda eksik bırakılan gerçek kullanıcı matrisi bu liste işlemleri için doğrulandı; tüm güvenlik alanları tamamlanmış sayılmıyor.
+
+| Kural / senaryo | Sonuç | Kanıt | Kalan işlem / sorumlu |
+| --- | --- | --- | --- |
+| TEST-04, AUTH-01: Anonim/oda dışı kullanıcı | GEÇTİ | GET/POST/PUT/DELETE anonim 401, başka odanın kullanıcısı 403 | Diğer endpointler ayrı kapsam |
+| SEC-11: Oda–kayıt sınırı | GEÇTİ | İki odanın sahibi yanlış oda adresinden PUT/DELETE ile 404 aldı | Yok |
+| Davetli üye | GEÇTİ | PUT 200, DELETE 204; ayrı GET isteğiyle kalıcı değişiklik/silme doğrulandı | Yok |
+| Geçersiz token | GEÇTİ | Bozuk token ile GET 401 | Expiry/revocation matrisi ayrı |
+| DB-10, DB-13: İzole şema | GEÇTİ | Boş test PostgreSQL üzerinde Flyway V1 ve V2 uygulandı; gerçek kullanıcı verisi kullanılmadı | Üretim yükseltme/yedek provası yapılmadı |
+| DB-01: Üretim DB rolleri | DOĞRULANAMADI | Test konteyneri bootstrap DB kullanıcısıyla çalıştı; test uygulama yetkilerini doğruluyor | Üretim least-privilege DB rolü ayrı test edilmeli |
+
+Komut: `mvn -Dtest=WatchlistAuthorizationIT test`, `DUO_TEST_DB_PORT=58509`, yerel Maven 3.9.16. Sonuç: 12 test, 0 hata, 0 atlama. Bu test normal test taramasından ayrı ve açıkça çalıştırılır. Tarayıcı E2E ve bağımsız insan incelemesi yapılmadı. Push/merge/deploy yapılmadı.
