@@ -219,6 +219,8 @@ Ana dizin: `/api/v1/rooms/{roomId}/watchlist`
 | `/{itemId}` | PUT | Başlık, link veya durumu günceller | Sadece oda üyesi |
 | `/{itemId}` | DELETE | Seçimi siler | Sadece oda üyesi |
 
+Güncelleme ve silmede önce URL'deki `roomId` için üyelik doğrulanır (üye değilse `403`). Ardından kaydın bu odaya ait olması gerekir; kayıt yoksa veya başka odadaysa `404` döner. Kullanıcı iki odaya da üye olsa bile farklı odanın kaydı bu URL üzerinden değiştirilemez.
+
 ```json
 POST /api/v1/rooms/{roomId}/watchlist
 {
@@ -330,6 +332,7 @@ docker compose down
 | :--- | :--- |
 | `JwtServiceTest` | Üretilen token içinden doğru kullanıcı UUID'sinin çıkarılması |
 | `JwtAuthenticationFilterTest` | Geçerli, bozuk ve süresi dolmuş token; eksik header; sonraki bileşenlerin hatalarının token hatası olarak yakalanmaması |
+| `WatchlistControllerTest` | PUT/DELETE için oda–kayıt eşleşmesi, yetkili üye, üye olmayan kullanıcı ve bulunamayan kayıt; controller ve gerçek servis, mock repository ile test edilir |
 | `RoomServiceImplTest` | Geçerli davet kodu, tekrar katılım engeli ve iki kişi oda limiti |
 | `TmdbMovieCatalogServiceTest` | TMDB JSON alanlarının response DTO'suna dönüştürülmesi |
 | `ManitimleProjeApplicationTests` | Spring context, Flyway migration ve PostgreSQL bağlantısı |

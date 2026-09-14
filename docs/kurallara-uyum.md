@@ -27,3 +27,22 @@ Amaç: Geçersiz erişim tokenı 401 döndürmeli; sonraki filtre veya uygulama 
 Komut: `mvn -Dtest=JwtAuthenticationFilterTest,JwtServiceTest test`.
 
 Windows Maven wrapper bu ortamda `Cannot index into a null array` hatasıyla başlayamadığı için bilgisayarda bulunan Maven 3.9.16 çalıştırıldı. Wrapper değiştirilmedi. Tüm test paketi ve uçtan uca akış çalıştırılmadı; deploy yapılmadı.
+
+## 2. Oda ve film kaydının eşleşmesi — 14 Eylül 2026
+
+Önceki davranış: Güncelleme ve silmede URL'deki `roomId` servise aktarılmıyordu. Kaydın gerçek odasına üyelik kontrolü vardı; fakat iki odaya üye kullanıcı yanlış odanın URL'si üzerinden işlem yapabiliyordu. Bu bulgu, üyesi olunmayan tüm odalara erişilebildiği anlamına gelmiyor.
+
+Yeni davranış: Controller `roomId` bilgisini servise aktarıyor. Servis önce bu odaya üyeliği doğruluyor (403), ardından kayıt ile oda eşleşmesini kontrol ediyor (eşleşmiyorsa veya kayıt yoksa 404). Güncelleme ve silme aynı `findItem` kontrolünü kullanıyor. Şema, bağımlılıklar ve frontend değiştirilmedi.
+
+| Kural / senaryo | Sonuç | Kanıt | Kalan işlem / sorumlu |
+| --- | --- | --- | --- |
+| TEST-03: Hatanın tekrarı | GEÇTİ | İlk çalıştırmada 8 testin 2'si başarısız: yanlış oda URL'si PUT için 200, DELETE için 204 döndürdü | Yok |
+| AUTH-01, SEC-11, API-01: Oda–kayıt sınırı | GEÇTİ | Düzeltme sonrası PUT/DELETE için yanlış oda 404, oda dışındaki kullanıcı 403, olmayan kayıt 404; reddedilen işlemlerde kayıt değişmedi ve silme çağrılmadı | Mock repository sınırı geçerli |
+| Yetkili üye | GEÇTİ | Aynı odadaki kayıt güncellendi (200) ve silme çağrıldı (204) | Gerçek DB sonucu ayrıca doğrulanmalı |
+| Regresyon | GEÇTİ | Maven 3.9.16 ile 18 test, 0 hata, 0 atlama | Yok |
+| TEST-04: Gerçek kimlik ve veritabanı ile rol matrisi | DOĞRULANAMADI | MockMvc standalone kullanıldı; SecurityFilterChain ve PostgreSQL başlatılmadı. Kimlik ve repository sonuçları test verisidir | Ayrı entegrasyon adımı; anonim ve gerçek A/B oturumları dahil |
+| TEST-15: Bağımsız inceleme | DOĞRULANAMADI | İnsan incelemesi yapılmadı | Birleştirmeden önce geliştirici incelemesi |
+
+Komut: `mvn -Dtest=WatchlistControllerTest,JwtAuthenticationFilterTest,JwtServiceTest,RoomServiceImplTest test`.
+
+Mockito dinamik agent uyarısı verdi; testler başarısız olmadı. Uyarıyı susturmak için ayar değiştirilmedi. Bu adım yerel kod ve test değişikliğidir; push, merge veya deploy yapılmadı.

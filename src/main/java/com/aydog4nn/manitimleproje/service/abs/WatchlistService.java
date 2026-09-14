@@ -9,6 +9,6 @@ import java.util.UUID;
 public interface WatchlistService {
     WatchlistItemResponse create(UUID currentUserId, UUID roomId, CreateWatchlistItemRequest request);
     List<WatchlistItemResponse> list(UUID currentUserId, UUID roomId);
-    WatchlistItemResponse update(UUID currentUserId, UUID itemId, UpdateWatchlistItemRequest request);
-    void delete(UUID currentUserId, UUID itemId);
+    WatchlistItemResponse update(UUID currentUserId, UUID roomId, UUID itemId, UpdateWatchlistItemRequest request);
+    void delete(UUID currentUserId, UUID roomId, UUID itemId);
 }

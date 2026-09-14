@@ -23,7 +23,18 @@ public class WatchlistController {
     public WatchlistController(WatchlistService watchlistService) { this.watchlistService = watchlistService; }
     @PostMapping @ResponseStatus(HttpStatus.CREATED) @Operation(summary = "Listeye seçim ekle", description = "Film, oyun veya başka bir ortak seçim ekler. Kaydı ekleyen kullanıcı token içinden bulunur.") public WatchlistItemResponse create(Authentication authentication, @PathVariable UUID roomId, @Valid @RequestBody CreateWatchlistItemRequest request) { return watchlistService.create(currentUserId(authentication), roomId, request); }
     @GetMapping @Operation(summary = "Ortak listeyi getir", description = "Odadaki bütün seçimleri getirir. Sadece odaya üye kullanıcılar görebilir.") public List<WatchlistItemResponse> list(Authentication authentication, @PathVariable UUID roomId) { return watchlistService.list(currentUserId(authentication), roomId); }
-    @PutMapping("/{itemId}") @Operation(summary = "Liste seçimini güncelle", description = "Başlığı, bağlantıyı veya izleme durumunu değiştirir. Örneğin PLANNED durumunu WATCHING yapabilirsin.") public WatchlistItemResponse update(Authentication authentication, @PathVariable UUID itemId, @Valid @RequestBody UpdateWatchlistItemRequest request) { return watchlistService.update(currentUserId(authentication), itemId, request); }
-    @DeleteMapping("/{itemId}") @ResponseStatus(HttpStatus.NO_CONTENT) @Operation(summary = "Listeden seçim sil", description = "Seçilen film veya oyunu ortak listeden kaldırır.") public void delete(Authentication authentication, @PathVariable UUID itemId) { watchlistService.delete(currentUserId(authentication), itemId); }
+    @PutMapping("/{itemId}")
+    @Operation(summary = "Liste seçimini güncelle", description = "Başlığı, bağlantıyı veya izleme durumunu değiştirir. Önce URL'deki odaya üyelik kontrol edilir; üye değilsen 403 döner. Kayıt bu odada değilse veya bulunamazsa 404 döner.")
+    public WatchlistItemResponse update(Authentication authentication, @PathVariable UUID roomId,
+                                       @PathVariable UUID itemId, @Valid @RequestBody UpdateWatchlistItemRequest request) {
+        return watchlistService.update(currentUserId(authentication), roomId, itemId, request);
+    }
+
+    @DeleteMapping("/{itemId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Listeden seçim sil", description = "Seçilen film veya oyunu ortak listeden kaldırır. Önce URL'deki odaya üyelik kontrol edilir; üye değilsen 403 döner. Kayıt bu odada değilse veya bulunamazsa 404 döner.")
+    public void delete(Authentication authentication, @PathVariable UUID roomId, @PathVariable UUID itemId) {
+        watchlistService.delete(currentUserId(authentication), roomId, itemId);
+    }
     private UUID currentUserId(Authentication authentication) { return UUID.fromString(authentication.getName()); }
 }
