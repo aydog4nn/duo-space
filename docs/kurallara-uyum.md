@@ -63,3 +63,16 @@ Mockito dinamik agent uyarısı verdi; testler başarısız olmadı. Uyarıyı s
 Komut: `mvn -Dtest=WatchlistRequestValidationTest,WatchlistControllerTest,JwtAuthenticationFilterTest,JwtServiceTest,RoomServiceImplTest test` (yerel Maven 3.9.16).
 
 Bu kontrol zararlı siteleri tespit eden bir itibar filtresi değildir. Geçersiz eski adres içeren kayıtlar güncellenirken adresin düzeltilmesi veya kaldırılması gerekir. Üretim yayını, push ve merge yapılmadı.
+
+## 4. Frontend bağlantı gösterimi — 14 Eylül 2026
+
+`App` içindeki doğrudan `sourceUrl` kullanımı `SourceLink` bileşenine taşındı. `getWebLink` protokol, host, kullanıcı bilgisi ve biçim kontrolünden geçen adresi döndürüyor; diğer değerlerde link oluşturulmuyor. Geçersiz eski kayıtta açıklama, boş alanda hiçbir bağlantı gösterilmiyor. Yeni sekmelerde `noopener noreferrer` kullanılıyor. Veritabanı kayıtları değiştirilmedi.
+
+| Kural / senaryo | Sonuç | Kanıt | Kalan işlem / sorumlu |
+| --- | --- | --- | --- |
+| SEC-13, CODE-05: Link sınırı | GEÇTİ | `node --test tests/webLink.test.js`: 23 test; zararlı protokoller, bozuk adresler, boş/farklı türler ve geçerli linkler | Site itibar kontrolü kapsam dışı |
+| TEST-10: Derleme | GEÇTİ | `node node_modules/vite/bin/vite.js build` | Yok |
+| TEST-14, UI-03, UI-21: Gerçek render | GEÇTİ | Yerel `/tests/source-link.html` ekranında geçerli link, geçersiz bağlantı açıklaması ve boş durum görüldü; Tab ile geçerli linke odaklanıldı | Mobil ve ekran okuyucu testi yapılmadı |
+| Gerçek kullanıcı akışı | DOĞRULANAMADI | İzole test ekranı API ve gerçek oturum kullanmıyor | Uçtan uca test ayrı adım |
+
+Ortamda npm bulunmadığından mevcut pnpm ile bağımlılıklar kuruldu; lockfile/paket sürümü değişikliği yapılmadı. pnpm esbuild kurulum scriptini engelledi; bu koruma gevşetilmeden mevcut binary ile Vite build başarılı oldu. Kurulumun ürettiği geçici pnpm yapılandırması kaldırıldı. Kontrol yalnızca yerel; push/merge/deploy yapılmadı.

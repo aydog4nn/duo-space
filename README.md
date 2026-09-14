@@ -326,6 +326,10 @@ docker compose down
 
 ## Testler
 
+Frontend bağlantı kontrolleri için `frontend` dizininde `npm test` çalıştırılır (Node.js test runner). `SourceLink`, API'den gelen eski kayıtlar dahil yalnızca doğrulanmış HTTP/HTTPS adreslerini açılabilir link olarak gösterir; geçersiz adreste açıklama gösterilir. Bu kontrol backend doğrulamasının yerine geçmez ve sitenin güvenilirliğini garanti etmez.
+
+Görsel kontrol için Vite geliştirme sunucusunda `/tests/source-link.html` açılabilir. Bu ekran API kullanmaz; geçerli, geçersiz ve boş bağlantı örneklerini gösterir. Production build'e dahil edilmez.
+
 ```bash
 ./mvnw test
 ```
