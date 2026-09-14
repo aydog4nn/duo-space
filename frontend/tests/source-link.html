@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="tr">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bağlantı bileşeni testi</title>
+  <div id="root"></div>
+  <script type="module">
+    import React from 'react';
+    import { createRoot } from 'react-dom/client';
+    import SourceLink from '../src/components/SourceLink.jsx';
+    import '../src/styles.css';
+
+    // Yalnızca Vite geliştirme sunucusunda açılan, API kullanmayan test ekranı.
+    createRoot(document.getElementById('root')).render(
+      React.createElement('main', { className: 'app-shell' },
+        ...[
+          ['Geçerli bağlantı', 'https://example.com/movie/1'],
+          ['Geçersiz eski bağlantı', 'javascript:alert(1)'],
+          ['Boş bağlantı', null],
+        ].map(([title, value]) => React.createElement('section', { className: 'featured-card', key: title },
+          React.createElement('div', { className: 'featured-copy' },
+            React.createElement('h2', null, title), React.createElement(SourceLink, { value }))))));
+  </script>
+</html>

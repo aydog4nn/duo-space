@@ -326,6 +326,10 @@ docker compose down
 
 ## Testler
 
+Frontend bağlantı kontrolleri için `frontend` dizininde `npm test` çalıştırılır (Node.js test runner). `SourceLink`, API'den gelen eski kayıtlar dahil yalnızca doğrulanmış HTTP/HTTPS adreslerini açılabilir link olarak gösterir; geçersiz adreste açıklama gösterilir. Bu kontrol backend doğrulamasının yerine geçmez ve sitenin güvenilirliğini garanti etmez.
+
+Görsel kontrol için Vite geliştirme sunucusunda `/tests/source-link.html` açılabilir. Bu ekran API kullanmaz; geçerli, geçersiz ve boş bağlantı örneklerini gösterir. Production build'e dahil edilmez.
+
 ```bash
 ./mvnw test
 ```
@@ -343,6 +347,26 @@ docker compose down
 TMDB servis testi gerçek TMDB ağına ihtiyaç duymaz. Test içinde lokal HTTP server çalışır; bu sayede JSON mapping davranışı dış ağ veya DNS probleminden bağımsız doğrulanır.
 
 ---
+
+### Gerçek HTTP/JWT/PostgreSQL yetki testi
+
+`WatchlistAuthorizationIT`, Spring uygulamasını rastgele yerel portta açar; gerçek kayıt/giriş endpointlerinden JWT alır. Anonim kullanıcı, oda dışındaki kullanıcı, iki odaya üye sahip ve davetli üye ile liste yetkilerini sınar. Repository veya kimlik mock değildir.
+
+Bu test normal `mvn test` taramasına dahil değildir; ayrı test PostgreSQL konteyneriyle açıkça çalıştırılır. Mevcut uygulama veritabanını kullanma. PowerShell örneği:
+
+```powershell
+docker run --detach --rm --name duo-auth-test --publish 127.0.0.1::5432 --env POSTGRES_DB=duospace_auth_test --env POSTGRES_USER=duo_test --env POSTGRES_PASSWORD=local-test-only postgres:17-alpine
+docker exec duo-auth-test pg_isready -U duo_test -d duospace_auth_test
+# "accepting connections" sonucunu gördükten sonra:
+$env:DUO_TEST_DB_PORT = (docker port duo-auth-test 5432).Split(':')[-1]
+.\mvnw.cmd -Dtest=WatchlistAuthorizationIT test
+docker stop duo-auth-test
+Remove-Item Env:DUO_TEST_DB_PORT
+```
+
+Wrapper çalışmıyorsa aynı test seçimi yerel Maven ile çalıştırılabilir. Test portu verilmezse test hata vererek durur; normal `DB_URL` değerine geri dönmez. Yeni konteynerde Flyway V1/V2 şemayı kurar. JWT anahtarı test süresince rastgele üretilir. Yukarıdaki parola yalnızca bu geçici yerel test konteynerine aittir. `docker stop` sonrası `--rm` konteyneri ve ona ait geçici veriyi kaldırır.
+
+Doğrulananlar: GET/POST/PUT/DELETE için anonim 401 ve oda dışındaki kullanıcı 403; yanlış oda ile PUT/DELETE 404; davetli üyeyle güncelleme/silme ve sonuçların yeniden okunması; bozuk token 401. Tarayıcı akışı, refresh/logout iptali, eşzamanlılık ve üretim DB rolü bu testin kapsamında değildir.
 
 ## API Dokümantasyonu
 
