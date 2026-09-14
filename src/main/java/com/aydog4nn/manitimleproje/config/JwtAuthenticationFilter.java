@@ -37,20 +37,23 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
+        UUID userId;
         try {
-            UUID userId = jwtService.extractUserId(authorization.substring(BEARER_PREFIX.length()));
-            if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(userId.toString(), null, List.of());
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authentication);
-            }
-            filterChain.doFilter(request, response);
+            userId = jwtService.extractUserId(authorization.substring(BEARER_PREFIX.length()));
         } catch (JwtException | IllegalArgumentException exception) {
             SecurityContextHolder.clearContext();
             response.setStatus(HttpStatus.UNAUTHORIZED.value());
             response.setContentType("application/json");
             response.getWriter().write("{\"message\":\"Geçersiz veya süresi dolmuş erişim tokenı.\"}");
+            return;
         }
+
+        if (SecurityContextHolder.getContext().getAuthentication() == null) {
+            UsernamePasswordAuthenticationToken authentication =
+                    new UsernamePasswordAuthenticationToken(userId.toString(), null, List.of());
+            authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+        }
+        filterChain.doFilter(request, response);
     }
 }

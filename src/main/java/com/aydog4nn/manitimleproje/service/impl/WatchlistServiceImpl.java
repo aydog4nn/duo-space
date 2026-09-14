@@ -40,19 +40,23 @@ public class WatchlistServiceImpl implements WatchlistService {
         return itemRepository.findByRoom_IdOrderByCreatedAtDesc(roomId).stream().map(this::toResponse).toList();
     }
     @Transactional
-    @Override public WatchlistItemResponse update(UUID currentUserId, UUID itemId, UpdateWatchlistItemRequest request) {
-        WatchlistItem item = findItem(itemId);
-        requireMembership(item.getRoom().getId(), currentUserId);
+    @Override public WatchlistItemResponse update(UUID currentUserId, UUID roomId, UUID itemId, UpdateWatchlistItemRequest request) {
+        requireMembership(roomId, currentUserId);
+        WatchlistItem item = findItem(roomId, itemId);
         item.update(request.title().trim(), request.sourceUrl(), request.status());
         return toResponse(item);
     }
     @Transactional
-    @Override public void delete(UUID currentUserId, UUID itemId) {
-        WatchlistItem item = findItem(itemId);
-        requireMembership(item.getRoom().getId(), currentUserId);
+    @Override public void delete(UUID currentUserId, UUID roomId, UUID itemId) {
+        requireMembership(roomId, currentUserId);
+        WatchlistItem item = findItem(roomId, itemId);
         itemRepository.delete(item);
     }
-    private WatchlistItem findItem(UUID id) { return itemRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Watchlist item", id)); }
+    private WatchlistItem findItem(UUID roomId, UUID itemId) {
+        return itemRepository.findById(itemId)
+                .filter(item -> roomId.equals(item.getRoom().getId()))
+                .orElseThrow(() -> new ResourceNotFoundException("Watchlist item", itemId));
+    }
     private void requireMembership(UUID roomId, UUID userId) {
         if (!roomMemberRepository.existsByRoom_IdAndUser_Id(roomId, userId)) {
             throw new AccessDeniedException("Room membership is required");
